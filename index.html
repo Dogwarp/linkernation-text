@@ -3,70 +3,91 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>リンカーネイション即興小説</title>
+<title>リンカーネイション即興スレッドデモ</title>
 <style>
-  body { font-family: sans-serif; padding: 20px; background: #fdf6e3; }
-  h1 { color: #b58900; }
+  body { font-family: "Yu Gothic", sans-serif; background-color: #fdf6e3; padding: 20px; }
+  h1, h2 { color: #b58900; }
   .thread { border: 1px solid #ccc; padding: 10px; margin-bottom: 20px; }
-  .comments { margin-top: 10px; padding-left: 20px; }
-  .comment { border-top: 1px dashed #ccc; padding: 5px 0; }
+  .comments { margin-top: 10px; }
+  button { margin: 5px 0; }
 </style>
 </head>
 <body>
 
-<h1>リンカーネイション即興小説（デモ）</h1>
+<h1>リンカーネイション即興スレッドデモ</h1>
 
-<section>
-<h2>新規スレッド作成</h2>
-<input type="text" id="newThreadTitle" placeholder="スレッドタイトル">
-<button onclick="createThread()">作成</button>
-</section>
+<button id="newThread">新しいスレッド作成</button>
 
-<section id="threadsContainer">
-<!-- スレッドがここに追加される -->
-</section>
+<div id="threads"></div>
 
 <script>
-function createThread() {
-    const titleInput = document.getElementById('newThreadTitle');
-    const title = titleInput.value.trim();
-    if (!title) return alert('タイトルを入力してください');
+const majorArcana = ["愚者","魔術師","女教皇","女帝","皇帝","教皇","恋人","戦車","力","隠者","運命の輪","正義","吊るされた男","死神","節制","悪魔","塔","星","月","太陽","審判","世界"];
+let threads = [];
 
-    // スレッド要素
-    const threadDiv = document.createElement('div');
-    threadDiv.className = 'thread';
-
-    const titleElem = document.createElement('h3');
-    titleElem.textContent = title;
-    threadDiv.appendChild(titleElem);
-
-    // コメントリスト
-    const commentsDiv = document.createElement('div');
-    commentsDiv.className = 'comments';
-    threadDiv.appendChild(commentsDiv);
-
-    // コメント投稿フォーム
-    const commentInput = document.createElement('input');
-    commentInput.type = 'text';
-    commentInput.placeholder = 'コメントを入力';
-    const commentBtn = document.createElement('button');
-    commentBtn.textContent = '投稿';
-    commentBtn.onclick = function() {
-        const commentText = commentInput.value.trim();
-        if (!commentText) return;
-        const commentElem = document.createElement('div');
-        commentElem.className = 'comment';
-        commentElem.textContent = commentText;
-        commentsDiv.appendChild(commentElem);
-        commentInput.value = '';
-    };
-
-    threadDiv.appendChild(commentInput);
-    threadDiv.appendChild(commentBtn);
-
-    document.getElementById('threadsContainer').prepend(threadDiv);
-    titleInput.value = '';
+function getRandomArcana(n) {
+  let shuffled = [...majorArcana].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, n);
 }
+
+function createThread() {
+  const thread = {
+    id: threads.length,
+    arcana: getRandomArcana(3),
+    comments: []
+  };
+  threads.push(thread);
+  renderThreads();
+}
+
+function renderThreads() {
+  const container = document.getElementById('threads');
+  container.innerHTML = '';
+  threads.forEach(thread => {
+    const div = document.createElement('div');
+    div.className = 'thread';
+    div.innerHTML = `
+      <h2>スレッド #${thread.id}</h2>
+      <p>配られた大アルカナ: ${thread.arcana.join(', ')}</p>
+      <div class="comments">
+        ${thread.comments.map(c => `<p>${c}</p>`).join('')}
+      </div>
+      <textarea id="commentInput${thread.id}" placeholder="1分以内に投稿"></textarea><br>
+      <button onclick="submitComment(${thread.id})">投稿</button>
+      <span id="timer${thread.id}"></span>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function submitComment(threadId) {
+  const textarea = document.getElementById(`commentInput${threadId}`);
+  if (!textarea.value.trim()) return;
+  threads[threadId].comments.push(textarea.value.trim());
+  textarea.value = '';
+  renderThreads();
+}
+
+function startTimer(threadId) {
+  let timeLeft = 60;
+  const timerSpan = document.getElementById(`timer${threadId}`);
+  const interval = setInterval(() => {
+    if (timeLeft <= 0) {
+      clearInterval(interval);
+      document.getElementById(`commentInput${threadId}`).disabled = true;
+      timerSpan.textContent = "時間切れ";
+    } else {
+      timerSpan.textContent = `残り ${timeLeft}s`;
+      timeLeft--;
+    }
+  }, 1000);
+}
+
+document.getElementById('newThread').addEventListener('click', () => {
+  createThread();
+  const newId = threads.length -1;
+  startTimer(newId);
+});
+
 </script>
 
 </body>
