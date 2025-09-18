@@ -66,6 +66,11 @@ playerHand = draw(5);
 aiHands = [draw(5), draw(5)];
 document.getElementById("playerHand").innerText = "手札: " + playerHand.map(i=>rnmNames[i-1]).join(", ");
 
+// 初期世界情勢カード
+let currentWorldCard = tarotNames[Math.floor(Math.random()*tarotNames.length)];
+logEl.textContent += `--- ゲーム開始 ---\n`;
+logEl.textContent += `世界情勢: 【${currentWorldCard}】\n`;
+
 // カード名取得
 function cardName(i){ return rnmNames[i-1]; }
 
@@ -80,10 +85,9 @@ function playTurn(){
     return;
   }
 
-  // 大アルカナランダム表示（世界情勢）
-  const worldCard = tarotNames[Math.floor(Math.random()*tarotNames.length)];
+  // 現在の世界情勢を表示・ログに残す
   logEl.textContent += `--- ターン ${turn+1} ---\n`;
-  logEl.textContent += `世界情勢: 【${worldCard}】\n`;
+  logEl.textContent += `世界情勢: 【${currentWorldCard}】\n`;
 
   // プレイヤー入力
   const cardInput = document.getElementById("playerCards").value.split(",").map(x=>parseInt(x.trim())).filter(x=>playerHand.includes(x));
@@ -148,8 +152,12 @@ function playTurn(){
     else{ if(playerFragments>0) playerFragments--; logEl.textContent += `駆け引き失敗…Dogwarpの欠片1枚減少。\n\n`; }
   }
 
+  // 次の世界情勢をランダム更新
+  currentWorldCard = tarotNames[Math.floor(Math.random()*tarotNames.length)];
+
   // 入力リセット
-  document.getElementById("playerCards").value=""; document.getElementById("playerStory").value="";
+  document.getElementById("playerCards").value=""; 
+  document.getElementById("playerStory").value="";
   turn++;
 }
 </script>
