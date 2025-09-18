@@ -3,199 +3,111 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>リンカーネイション 即興小説バトル v3</title>
+<title>リンカーネイション オンライン版</title>
 <style>
-  body { font-family: "Yu Gothic", sans-serif; background-color: #fdf6e3; padding: 20px; }
-  h1 { color: #b58900; }
-  .story { border:1px solid #ccc; margin-bottom:10px; padding:10px; }
-  .story-title { font-weight:bold; cursor:pointer; }
-  .cards, .hand { margin:5px 0; }
-  button { margin:2px; }
+  body { font-family: "Yu Gothic", sans-serif; background-color: #fdf6e3; color: #333; padding: 20px; }
+  h1, h2 { color: #b58900; }
+  .thread { border: 1px solid #ccc; margin-bottom: 10px; padding: 10px; }
+  .post { margin-left: 20px; margin-bottom: 5px; }
+  button { margin-top: 5px; }
+  input[type=text] { width: 80%; }
 </style>
 </head>
 <body>
-<h1>リンカーネイション 即興小説バトル v3</h1>
 
-<div>
-  <button onclick="startNewStory()">新スレッド作成</button>
-</div>
+<h1>リンカーネイション オンライン版</h1>
+<h2>スレッド一覧</h2>
+<div id="threads"></div>
 
-<div id="stories"></div>
+<h2>スレッド作成</h2>
+<input type="text" id="threadTitle" placeholder="タイトルを入力">
+<button onclick="createThread()">作成</button>
 
-<div id="handContainer" style="display:none;">
-  <div>スレッド: <span id="currentStoryTitle"></span></div>
-  <div>大アルカナお題: <span id="majorCards"></span></div>
-  <div class="hand">手札: <span id="handCards"></span></div>
-  <textarea id="storyInput" rows="2" cols="50" placeholder="ここに続きの文章を書きます（1分以内）"></textarea><br>
-  <button onclick="submitStory()">投稿</button>
-  <button onclick="skipTurn()">降参／スキップ</button>
-  <div>残り時間: <span id="timer">60</span>秒</div>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
-// Firebase 初期化
-const firebaseConfig = {
-  apiKey: "AIzaSyDdLmTIEgU3WNEN0Pr4fFNpQKjcYsmUXU8",
-  authDomain: "linkernation-online.firebaseapp.com",
-  projectId: "linkernation-online",
-  storageBucket: "linkernation-online.appspot.com",
-  messagingSenderId: "398889265909",
-  appId: "1:398889265909:web:33f569fc04e98350d6b3bc",
-  measurementId: "G-BH272B3F45"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-let hand = [];
-let majorHand = [];
-let currentStoryId = null;
-let timerInterval = null;
-let timeLeft = 60;
-let currentStoryTitle = "";
-
-const majorArcana = ["愚者","魔術師","女教皇","女帝","皇帝","教皇","恋人","戦車","力","隠者","運命の輪","正義","吊るされた男","死神","節制","悪魔","塔","星","月","太陽","審判","世界"];
-const minorArcana = ["騎士","クローバー","船","家","木","雲","蛇","棺","花束","鎌","鞭","鳥","子供","狐","熊","星","コウノトリ","犬","塔","庭園","山","道","ネズミ","ハート","指輪","本","手紙","紳士","淑女","百合","太陽","月","鍵","魚","錨","十字架"];
-
-// --- 新規スレッド ---
-function startNewStory(){
-  const title = prompt("スレッドタイトルを入力してください");
-  if(!title) return;
-
-  currentStoryId = db.ref('stories').push().key;
-  hand = pickCards(5);
-  majorHand = pickMajor(3);
-  currentStoryTitle = title;
-
-  db.ref('stories/'+currentStoryId).set({
-    title: title,
-    cards: hand,
-    major: majorHand,
-    votes: 0,
-    contents: []
-  });
-
-  showHand();
-}
-
-// --- 既存スレッドに連鎖投稿 ---
-function continueStory(storyId, title){
-  currentStoryId = storyId;
-  currentStoryTitle = title;
-  hand = pickCards(5);
-  majorHand = pickMajor(3);
-  showHand();
-}
-
-function showHand(){
-  document.getElementById("handContainer").style.display = "block";
-  document.getElementById("handCards").innerText = hand.join(", ");
-  document.getElementById("majorCards").innerText = majorHand.join(", ");
-  document.getElementById("currentStoryTitle").innerText = currentStoryTitle;
-  startTimer();
-}
-
-// --- 投稿処理 ---
-function submitStory(){
-  const text = document.getElementById("storyInput").value;
-  if(!text) return alert("1文字以上書いてください");
-
-  const newPost = {
-    text: text,
-    votes: 0,
-    timestamp: Date.now()
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdLmTIEgU3WNEN0Pr4fFNpQKjcYsmUXU8",
+    authDomain: "linkernation-online.firebaseapp.com",
+    databaseURL: "https://linkernation-online-default-rtdb.firebaseio.com",
+    projectId: "linkernation-online",
+    storageBucket: "linkernation-online.appspot.com",
+    messagingSenderId: "398889265909",
+    appId: "1:398889265909:web:33f569fc04e98350d6b3bc"
   };
-  db.ref('stories/'+currentStoryId+'/contents').push(newPost);
-  stopTimer();
-  document.getElementById("storyInput").value = "";
-  document.getElementById("handContainer").style.display = "none";
-  renderStories();
-}
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-function skipTurn(){
-  stopTimer();
-  document.getElementById("storyInput").value = "";
-  document.getElementById("handContainer").style.display = "none";
-}
-
-// --- タイマー ---
-function startTimer(){
-  timeLeft = 60;
-  document.getElementById("timer").innerText = timeLeft;
-  timerInterval = setInterval(()=>{
-    timeLeft--;
-    document.getElementById("timer").innerText = timeLeft;
-    if(timeLeft<=0){
-      stopTimer();
-      alert("時間切れです！");
-      skipTurn();
-    }
-  },1000);
-}
-
-function stopTimer(){
-  clearInterval(timerInterval);
-}
-
-// --- いいね ---
-function vote(storyId, contentId){
-  const ref = db.ref(`stories/${storyId}/contents/${contentId}/votes`);
-  ref.transaction(v => (v||0)+1);
-}
-
-// --- カード選択 ---
-function pickCards(n){
-  let arr = [];
-  for(let i=0;i<n;i++){
-    arr.push(minorArcana[Math.floor(Math.random()*minorArcana.length)]);
-  }
-  return arr;
-}
-function pickMajor(n){
-  let arr = [];
-  let copy = [...majorArcana];
-  for(let i=0;i<n;i++){
-    const idx = Math.floor(Math.random()*copy.length);
-    arr.push(copy[idx]);
-    copy.splice(idx,1);
-  }
-  return arr;
-}
-
-// --- スレッド表示 ---
-function renderStories(){
-  db.ref('stories').once('value',snapshot=>{
-    const storiesDiv = document.getElementById("stories");
-    storiesDiv.innerHTML = "";
-    const stories = snapshot.val();
-    if(!stories) return;
-
-    // 人気順にソート
-    const sorted = Object.entries(stories).sort((a,b)=>b[1].votes - a[1].votes);
-    sorted.forEach(([id,story])=>{
-      const div = document.createElement("div");
-      div.className = "story";
-      div.innerHTML = `<div class="story-title" onclick="continueStory('${id}','${story.title}')">${story.title} [手札: ${story.cards.join(", ")}] [お題: ${story.major.join(", ")}]</div>`;
-      
-      const contents = Object.entries(story.contents||{}).sort((a,b)=>b[1].votes - a[1].votes);
-      contents.forEach(([cid,c])=>{
-        const p = document.createElement("p");
-        p.innerText = c.text + ` (いいね: ${c.votes||0})`;
-        const voteBtn = document.createElement("button");
-        voteBtn.innerText = "👍";
-        voteBtn.onclick = ()=>vote(id,cid);
-        p.appendChild(voteBtn);
-        div.appendChild(p);
-      });
-
-      storiesDiv.appendChild(div);
+  // スレッド作成
+  function createThread() {
+    const title = document.getElementById('threadTitle').value.trim();
+    if (!title) return alert("タイトルを入力してください");
+    const threadRef = db.ref('threads').push();
+    threadRef.set({
+      title: title,
+      posts: {}
     });
-  });
-}
+    document.getElementById('threadTitle').value = "";
+  }
 
-renderStories();
+  // 投稿作成
+  function submitPost(threadID, authorInput, textInput) {
+    const author = authorInput.value.trim() || "名無し";
+    const text = textInput.value.trim();
+    if (!text) return;
+    const postRef = db.ref('threads/' + threadID + '/posts').push();
+    postRef.set({
+      author: author,
+      text: text,
+      timestamp: Date.now(),
+      likes: 0
+    });
+    textInput.value = "";
+  }
+
+  // リアルタイム更新
+  db.ref('threads').on('value', snapshot => {
+    const threadsDiv = document.getElementById('threads');
+    threadsDiv.innerHTML = "";
+    const threads = snapshot.val() || {};
+    for (const threadID in threads) {
+      const thread = threads[threadID];
+      const threadDiv = document.createElement('div');
+      threadDiv.className = 'thread';
+      const threadTitle = document.createElement('h3');
+      threadTitle.textContent = thread.title;
+      threadDiv.appendChild(threadTitle);
+
+      // 投稿欄
+      const authorInput = document.createElement('input');
+      authorInput.type = 'text';
+      authorInput.placeholder = '名前';
+      threadDiv.appendChild(authorInput);
+
+      const textInput = document.createElement('input');
+      textInput.type = 'text';
+      textInput.placeholder = '投稿内容';
+      threadDiv.appendChild(textInput);
+
+      const submitBtn = document.createElement('button');
+      submitBtn.textContent = '投稿';
+      submitBtn.onclick = () => submitPost(threadID, authorInput, textInput);
+      threadDiv.appendChild(submitBtn);
+
+      // 投稿表示
+      const posts = thread.posts || {};
+      for (const postID in posts) {
+        const post = posts[postID];
+        const postDiv = document.createElement('div');
+        postDiv.className = 'post';
+        postDiv.textContent = `${post.author}: ${post.text}`;
+        threadDiv.appendChild(postDiv);
+      }
+
+      threadsDiv.appendChild(threadDiv);
+    }
+  });
 </script>
+
 </body>
 </html>
