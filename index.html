@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>リンカーネイション（完全版）</title>
+<title>リンカーネイション（完全版・大アルカナ対応）</title>
 <style>
   body { font-family: "Yu Gothic", sans-serif; background-color: #fdf6e3; color: #333; line-height: 1.6; padding: 20px; }
   h1,h2 { color: #b58900; }
@@ -14,7 +14,7 @@
 </head>
 <body>
 
-<h1>リンカーネイション（完全版）</h1>
+<h1>リンカーネイション（完全版・大アルカナ対応）</h1>
 
 <section>
 <h2>プレイヤー: Dogwarp</h2>
@@ -48,7 +48,6 @@
 <script>
 // カードデータ
 const rnmCards = Array.from({length:36},(_,i)=>i+1);
-const tarotCards = Array.from({length:22},(_,i)=>i+0);
 const rnmNames = ["騎士","クローバー","船","家","木","雲","蛇","棺","花束","鎌","鞭","鳥","子供","狐","熊","星","コウノトリ","犬","塔","庭園","山","道","ネズミ","ハート","指輪","本","手紙","紳士","淑女","百合","太陽","月","鍵","魚","錨","十字架"];
 const tarotNames = ["愚者","魔術師","女教皇","女帝","皇帝","教皇","恋人","戦車","力","隠者","運命の輪","正義","吊るされた男","死神","節制","悪魔","塔","星","月","太陽","審判","世界"];
 
@@ -67,6 +66,9 @@ playerHand = draw(5);
 aiHands = [draw(5), draw(5)];
 document.getElementById("playerHand").innerText = "手札: " + playerHand.map(i=>rnmNames[i-1]).join(", ");
 
+// カード名取得
+function cardName(i){ return rnmNames[i-1]; }
+
 // ターン実行
 function playTurn(){
   if(deck.length===0 && playerHand.length===0 && aiHands.every(h=>h.length===0)){
@@ -78,6 +80,7 @@ function playTurn(){
     return;
   }
 
+  // 大アルカナランダム表示（世界情勢）
   const worldCard = tarotNames[Math.floor(Math.random()*tarotNames.length)];
   logEl.textContent += `--- ターン ${turn+1} ---\n`;
   logEl.textContent += `世界情勢: 【${worldCard}】\n`;
@@ -85,16 +88,16 @@ function playTurn(){
   // プレイヤー入力
   const cardInput = document.getElementById("playerCards").value.split(",").map(x=>parseInt(x.trim())).filter(x=>playerHand.includes(x));
   const story = document.getElementById("playerStory").value || "物語なし";
-  const pc = cardInput.map(i=>rnmNames[i-1]);
+  const pc = cardInput.map(i=>cardName(i));
   const playerCreativity = Math.floor(Math.random()*6);
   const playerPersuasion = Math.floor(Math.random()*4);
   const playerFit = Math.floor(Math.random()*3);
   const playerPoint = playerCreativity + playerPersuasion + playerFit;
   playerFragments += playerPoint;
-  // 手札からカードを削除し補充
+  // 手札からカード削除し補充
   playerHand = playerHand.filter(c=>!cardInput.includes(c));
   playerHand = playerHand.concat(draw(Math.min(cardInput.length, deck.length)));
-  document.getElementById("playerHand").innerText = "手札: " + playerHand.map(i=>rnmNames[i-1]).join(", ");
+  document.getElementById("playerHand").innerText = "手札: " + playerHand.map(i=>cardName(i)).join(", ");
 
   logEl.textContent += `Dogwarp: 役【${pc.join("＋")}】\n`;
   logEl.textContent += `物語: ${story}\n`;
@@ -109,14 +112,14 @@ function playTurn(){
     for(let i=0;i<aiCardCount;i++){ aiCards.push(tmp.splice(Math.floor(Math.random()*tmp.length),1)[0]); }
     aiHands[idx] = hand.filter(c=>!aiCards.includes(c));
     aiHands[idx] = aiHands[idx].concat(draw(Math.min(aiCardCount, deck.length)));
-    const aiStory = `AIが${aiCards.map(i=>rnmNames[i-1]).join("＋")}で冒険しました。`;
+    const aiStory = `AIが${aiCards.map(i=>cardName(i)).join("＋")}で冒険しました。`;
     const aiCreativity = Math.floor(Math.random()*6);
     const aiPersuasion = Math.floor(Math.random()*4);
     const aiFit = Math.floor(Math.random()*3);
     const aiPoint = aiCreativity + aiPersuasion + aiFit;
     aiFragments[idx] += aiPoint;
 
-    logEl.textContent += `${aiNames[idx]}: 役【${aiCards.map(i=>rnmNames[i-1]).join("＋")}】\n`;
+    logEl.textContent += `${aiNames[idx]}: 役【${aiCards.map(i=>cardName(i)).join("＋")}】\n`;
     logEl.textContent += `物語: ${aiStory}\n`;
     logEl.textContent += `得点: 創造性${aiCreativity}点、説得力${aiPersuasion}点、適合性${aiFit}点\n`;
     logEl.textContent += `運命の欠片: ${aiFragments[idx]}枚\n`;
