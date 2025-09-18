@@ -1,9 +1,12 @@
-<!-- 観戦モードボタン -->
-<button id="spectateBtn" onclick="toggleSpectate()">
-  👁️ 観戦モード
-</button>
-
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>リンカーネイション 簡易スレッドデモ</title>
 <style>
+body { font-family: "Yu Gothic", sans-serif; background-color: #fdf6e3; color: #333; padding: 20px; }
+h1 { color: #b58900; }
 #spectateBtn {
   position: fixed;
   top: 15px;
@@ -20,26 +23,53 @@
   box-shadow: 0 2px 5px rgba(0,0,0,0.3);
   transition: all 0.2s ease;
 }
-#spectateBtn:hover {
-  background-color: #cb4b16;
-  transform: translateY(-2px);
-}
+#spectateBtn:hover { background-color: #cb4b16; transform: translateY(-2px); }
+#newPost { margin-top: 20px; }
+.post { border-bottom: 1px solid #ccc; padding: 5px 0; }
+.postTitle { font-weight: bold; }
 </style>
+</head>
+<body>
+
+<h1>リンカーネイション 簡易スレッドデモ</h1>
+<button id="spectateBtn" onclick="toggleSpectate()">👁️ 観戦モード</button>
+
+<div id="thread">
+  <!-- 投稿がここに追加される -->
+</div>
+
+<form id="newPost" onsubmit="submitPost(event)">
+  <input type="text" id="title" placeholder="タイトルを入力 (1行推奨)" style="width: 70%;" required>
+  <button type="submit">投稿</button>
+</form>
 
 <script>
 let spectate = false;
+
 function toggleSpectate() {
   spectate = !spectate;
-  const form = document.getElementById('newPost'); // 投稿フォームのIDに合わせる
+  const form = document.getElementById('newPost');
   const btn = document.getElementById('spectateBtn');
   if(spectate) {
-    if(form) form.style.display = 'none';
+    form.style.display = 'none';
     btn.textContent = '✏️ 投稿モードに戻る';
-    console.log('観戦モード ON');
   } else {
-    if(form) form.style.display = 'block';
+    form.style.display = 'block';
     btn.textContent = '👁️ 観戦モード';
-    console.log('観戦モード OFF');
   }
 }
+
+function submitPost(e) {
+  e.preventDefault();
+  const titleInput = document.getElementById('title');
+  const thread = document.getElementById('thread');
+  const post = document.createElement('div');
+  post.className = 'post';
+  post.innerHTML = `<div class="postTitle">${titleInput.value}</div>`;
+  thread.prepend(post); // 新しい投稿を上に追加
+  titleInput.value = '';
+}
 </script>
+
+</body>
+</html>
