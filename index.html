@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>リンカーネイション（最新版・番号付き手札＆ルール表示）</title>
+<title>リンカーネイション（チェックボックスUI版）</title>
 <style>
   body { font-family: "Yu Gothic", sans-serif; background-color: #fdf6e3; color: #333; line-height: 1.6; padding: 20px; }
   h1,h2,h3 { color: #b58900; }
   pre { background-color: #eee8d5; padding: 10px; border-radius: 5px; overflow-x: auto; }
-  button, select, input { margin: 5px; padding: 5px 10px; }
   .hand { margin-bottom: 10px; }
+  .card { margin-right: 10px; }
   table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
   th, td { border: 1px solid #ccc; padding: 5px 10px; text-align: center; }
   th { background-color: #eee8d5; }
@@ -17,7 +17,7 @@
 </head>
 <body>
 
-<h1>リンカーネイション（最新版）</h1>
+<h1>リンカーネイション（チェックボックスUI版）</h1>
 
 <section>
 <h2>ゲーム概要</h2>
@@ -25,24 +25,10 @@
 </section>
 
 <section>
-<h2>遊び方</h2>
-<ol>
-<li>プレイヤー人数と名前を決める（AIプレイヤー1〜3人補充）。</li>
-<li>手札5枚を各プレイヤーに配布（ルノルマン36枚、大アルカナ22枚）。</li>
-<li>AI GMが世界情勢カード（大アルカナ）を発表。</li>
-<li>手札で役を作り、物語を語る。駆け引きも可能。</li>
-<li>AIプレイヤーも自動で役・物語・駆け引きを生成。</li>
-<li>判定：創造性（0〜5点）、説得力（0〜3点）、適合性（0〜2点）。運命の欠片を獲得。</li>
-<li>山札が尽きた時点で最も欠片を集めたプレイヤーが勝利。</li>
-</ol>
-</section>
-
-<section>
-<h2>手札（番号付き）</h2>
+<h2>手札（チェックボックスで選択）</h2>
 <div class="hand" id="playerHand"></div>
-<label>役のカードを選択（番号カンマ区切り）:</label>
-<input type="text" id="playerCards" placeholder="例: 3,16,32">
-<br>
+<p>選択中のカード: <span id="currentRole"></span></p>
+
 <label>物語:</label>
 <input type="text" id="playerStory" placeholder="ここに物語を入力">
 <br>
@@ -62,99 +48,51 @@
 </section>
 
 <section>
-<h2>カード一覧</h2>
-<h3>ルノルマン36枚</h3>
-<table>
-<tr><th>番号</th><th>カード名</th></tr>
-<tr><td>1</td><td>騎士</td></tr>
-<tr><td>2</td><td>クローバー</td></tr>
-<tr><td>3</td><td>船</td></tr>
-<tr><td>4</td><td>家</td></tr>
-<tr><td>5</td><td>木</td></tr>
-<tr><td>6</td><td>雲</td></tr>
-<tr><td>7</td><td>蛇</td></tr>
-<tr><td>8</td><td>棺</td></tr>
-<tr><td>9</td><td>花束</td></tr>
-<tr><td>10</td><td>鎌</td></tr>
-<tr><td>11</td><td>鞭</td></tr>
-<tr><td>12</td><td>鳥</td></tr>
-<tr><td>13</td><td>子供</td></tr>
-<tr><td>14</td><td>狐</td></tr>
-<tr><td>15</td><td>熊</td></tr>
-<tr><td>16</td><td>星</td></tr>
-<tr><td>17</td><td>コウノトリ</td></tr>
-<tr><td>18</td><td>犬</td></tr>
-<tr><td>19</td><td>塔</td></tr>
-<tr><td>20</td><td>庭園</td></tr>
-<tr><td>21</td><td>山</td></tr>
-<tr><td>22</td><td>道</td></tr>
-<tr><td>23</td><td>ネズミ</td></tr>
-<tr><td>24</td><td>ハート</td></tr>
-<tr><td>25</td><td>指輪</td></tr>
-<tr><td>26</td><td>本</td></tr>
-<tr><td>27</td><td>手紙</td></tr>
-<tr><td>28</td><td>紳士</td></tr>
-<tr><td>29</td><td>淑女</td></tr>
-<tr><td>30</td><td>百合</td></tr>
-<tr><td>31</td><td>太陽</td></tr>
-<tr><td>32</td><td>月</td></tr>
-<tr><td>33</td><td>鍵</td></tr>
-<tr><td>34</td><td>魚</td></tr>
-<tr><td>35</td><td>錨</td></tr>
-<tr><td>36</td><td>十字架</td></tr>
-</table>
-
-<h3>大アルカナ22枚</h3>
-<table>
-<tr><th>番号</th><th>カード名</th></tr>
-<tr><td>0</td><td>愚者</td></tr>
-<tr><td>1</td><td>魔術師</td></tr>
-<tr><td>2</td><td>女教皇</td></tr>
-<tr><td>3</td><td>女帝</td></tr>
-<tr><td>4</td><td>皇帝</td></tr>
-<tr><td>5</td><td>教皇</td></tr>
-<tr><td>6</td><td>恋人</td></tr>
-<tr><td>7</td><td>戦車</td></tr>
-<tr><td>8</td><td>力</td></tr>
-<tr><td>9</td><td>隠者</td></tr>
-<tr><td>10</td><td>運命の輪</td></tr>
-<tr><td>11</td><td>正義</td></tr>
-<tr><td>12</td><td>吊るされた男</td></tr>
-<tr><td>13</td><td>死神</td></tr>
-<tr><td>14</td><td>節制</td></tr>
-<tr><td>15</td><td>悪魔</td></tr>
-<tr><td>16</td><td>塔</td></tr>
-<tr><td>17</td><td>星</td></tr>
-<tr><td>18</td><td>月</td></tr>
-<tr><td>19</td><td>太陽</td></tr>
-<tr><td>20</td><td>審判</td></tr>
-<tr><td>21</td><td>世界</td></tr>
-</table>
-</section>
-
-<section>
 <h2>プレイログ</h2>
 <pre id="log"></pre>
 </section>
 
 <script>
-// --- ここからJS: AI生成＋ターン処理 ---
+// カード名データ
 const rnmNames = ["騎士","クローバー","船","家","木","雲","蛇","棺","花束","鎌","鞭","鳥","子供","狐","熊","星","コウノトリ","犬","塔","庭園","山","道","ネズミ","ハート","指輪","本","手紙","紳士","淑女","百合","太陽","月","鍵","魚","錨","十字架"];
 const tarotNames = ["愚者","魔術師","女教皇","女帝","皇帝","教皇","恋人","戦車","力","隠者","運命の輪","正義","吊るされた男","死神","節制","悪魔","塔","星","月","太陽","審判","世界"];
 
 let deck = Array.from({length:36},(_,i)=>i+1);
 function shuffle(a){ return a.sort(()=>Math.random()-0.5);}
-deck=shuffle(deck);
+deck = shuffle(deck);
 let playerHand = deck.splice(0,5);
 let aiHands = [deck.splice(0,5), deck.splice(0,5)];
-let playerFragments=0, aiFragments=[0,0];
+let playerFragments = 0, aiFragments=[0,0];
 let turn=0;
 let logEl = document.getElementById("log");
 const aiNames=["AI_アルタ","AI_ベラ"];
 let currentWorldCard = tarotNames[Math.floor(Math.random()*tarotNames.length)];
-document.getElementById("playerHand").innerText = playerHand.map((v,i)=>`${v}: ${rnmNames[v-1]}`).join(", ");
 logEl.textContent += "--- ゲーム開始 ---\n";
 logEl.textContent += `世界情勢: 【${currentWorldCard}】\n`;
+
+// 手札表示とチェックボックス生成
+function renderHand() {
+  const handEl = document.getElementById("playerHand");
+  handEl.innerHTML = "";
+  playerHand.forEach((num,i)=>{
+    const cb = document.createElement("input");
+    cb.type="checkbox";
+    cb.id="card"+i;
+    cb.value=num;
+    cb.className="cardCB";
+    cb.onchange = updateCurrentRole;
+    const label = document.createElement("label");
+    label.htmlFor = "card"+i;
+    label.innerText=`${num}: ${rnmNames[num-1]}`;
+    handEl.appendChild(cb);
+    handEl.appendChild(label);
+    handEl.appendChild(document.createTextNode(" "));
+  });
+}
+function updateCurrentRole(){
+  const selected = Array.from(document.querySelectorAll(".cardCB:checked")).map(cb=>parseInt(cb.value));
+  document.getElementById("currentRole").innerText = selected.map(i=>rnmNames[i-1]).join("＋");
+}
 
 function cardName(i){ return rnmNames[i-1]; }
 
@@ -172,7 +110,7 @@ function generateAIStory(aiName, aiCards, worldCard){
 
 function playTurn(){
   // プレイヤー
-  const sel = document.getElementById("playerCards").value.split(",").map(x=>parseInt(x));
+  const sel = Array.from(document.querySelectorAll(".cardCB:checked")).map(cb=>parseInt(cb.value));
   const story = document.getElementById("playerStory").value || "(物語なし)";
   const move = document.getElementById("playerMove").value;
   const target = parseInt(document.getElementById("targetAI").value);
@@ -180,7 +118,7 @@ function playTurn(){
   const creativity = Math.floor(Math.random()*6);
   const persuasiveness = Math.floor(Math.random()*4);
   const fit = Math.floor(Math.random()*3);
-  playerFragments+=creativity+persuasiveness+fit;
+  playerFragments += creativity + persuasiveness + fit;
 
   logEl.textContent += `--- 第${turn+1}ターン ---\n`;
   logEl.textContent += `Dogwarp: 役【${cardStr}】\n物語: ${story}\n得点: 創造性${creativity}、説得力${persuasiveness}、適合性${fit}\n運命の欠片: ${playerFragments}\n`;
@@ -188,7 +126,7 @@ function playTurn(){
   // AIターン
   aiHands.forEach((hand,i)=>{
     const ai = generateAIStory(aiNames[i], hand, currentWorldCard);
-    aiFragments[i]+=ai.creativity+ai.persuasiveness+ai.fit;
+    aiFragments[i] += ai.creativity + ai.persuasiveness + ai.fit;
     logEl.textContent += `${aiNames[i]}: 役【${ai.cardStr}】\n物語: ${ai.story}\n得点: 創造性${ai.creativity}、説得力${ai.persuasiveness}、適合性${ai.fit}\n運命の欠片: ${aiFragments[i]}\n`;
   });
 
@@ -198,6 +136,8 @@ function playTurn(){
   logEl.scrollTop = logEl.scrollHeight;
   turn++;
 }
+
+renderHand();
 </script>
 
 </body>
