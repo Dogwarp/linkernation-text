@@ -9,18 +9,22 @@
   h1 { color: #b58900; }
   .thread { border: 1px solid #ccc; padding: 10px; margin-bottom: 20px; }
   .comment { margin-left: 20px; padding: 5px; border-bottom: 1px dashed #ccc; }
-  button { margin-left: 10px; }
+  button { margin-left: 5px; }
 </style>
 </head>
 <body>
 
 <h1>リンカーネイション 即興スレッド</h1>
+<div>
+  <input type="text" id="newThreadTitle" placeholder="新しいスレッドタイトル">
+  <button onclick="createThread()">スレッド作成</button>
+</div>
 <div id="threads"></div>
 
 <script>
 let threads = [
-  {title: "愚者が旅立つ", comments: [{text:"最初の一歩", likes:0},{text:"ワクワク感", likes:0}]},
-  {title: "戦車で挑む英雄", comments: [{text:"スピード感", likes:0},{text:"戦いの予感", likes:0}]}
+  {title: "愚者が旅立つ", comments: []},
+  {title: "戦車で挑む英雄", comments: []}
 ];
 
 function displayThreads() {
@@ -30,8 +34,10 @@ function displayThreads() {
     const div = document.createElement("div");
     div.className = "thread";
     div.innerHTML = `<h2>${thread.title}</h2>
-                     <input type="text" id="input-${tIndex}" placeholder="コメントを書いて30秒以内に投稿"/>
-                     <button onclick="postComment(${tIndex})">投稿</button>`;
+                     <input type="text" id="input-${tIndex}" placeholder="コメントを書いて1分以内に投稿"/>
+                     <button onclick="postComment(${tIndex})">投稿</button>
+                     <span id="timer-${tIndex}"></span>`;
+    
     // コメントをいいね順に表示
     thread.comments
       .sort((a,b) => b.likes - a.likes)
@@ -45,14 +51,45 @@ function displayThreads() {
   });
 }
 
+function createThread() {
+  const titleInput = document.getElementById("newThreadTitle");
+  const title = titleInput.value.trim();
+  if(title) {
+    threads.push({title:title, comments:[]});
+    titleInput.value = "";
+    displayThreads();
+  }
+}
+
+// タイマー管理用オブジェクト
+let timers = {};
+
 function postComment(tIndex) {
   const input = document.getElementById(`input-${tIndex}`);
   const text = input.value.trim();
-  if(text) {
-    threads[tIndex].comments.push({text:text, likes:0});
-    input.value = "";
-    displayThreads();
+  if(!text) return;
+
+  // タイマーが既にある場合は終了
+  if(timers[tIndex]) {
+    clearInterval(timers[tIndex].interval);
   }
+
+  // 投稿と同時に1分タイマー開始
+  let timeLeft = 60;
+  document.getElementById(`timer-${tIndex}`).textContent = `残り時間: ${timeLeft}s`;
+  
+  timers[tIndex] = {interval: setInterval(() => {
+    timeLeft--;
+    document.getElementById(`timer-${tIndex}`).textContent = `残り時間: ${timeLeft}s`;
+    if(timeLeft <= 0) {
+      clearInterval(timers[tIndex].interval);
+      document.getElementById(`timer-${tIndex}`).textContent = `投稿時間終了`;
+    }
+  }, 1000)};
+
+  threads[tIndex].comments.push({text:text, likes:0});
+  input.value = "";
+  displayThreads();
 }
 
 function likeComment(tIndex, cIndex) {
