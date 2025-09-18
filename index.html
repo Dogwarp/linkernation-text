@@ -2,138 +2,69 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<title>リンカーネイション Firebase デモ</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>リンカーネイション 即興スレッド</title>
-<style>
-  body { font-family: "Yu Gothic", sans-serif; background-color: #fdf6e3; padding: 20px; }
-  h1 { color: #b58900; }
-  .thread, .log-thread { border: 1px solid #ccc; padding: 10px; margin-bottom: 20px; }
-  .comment { margin-left: 20px; padding: 5px; border-bottom: 1px dashed #ccc; }
-  button { margin-left: 5px; }
-</style>
 </head>
 <body>
+<h1>リンカーネイション 投稿ログデモ</h1>
 
-<h1>リンカーネイション 即興スレッド</h1>
-<div>
-  <input type="text" id="newThreadTitle" placeholder="新しいスレッドタイトル">
-  <button onclick="createThread()">スレッド作成</button>
-  <button onclick="showLogs()">過去ログ＆ランキング</button>
-</div>
-<div id="threads"></div>
-<div id="logs" style="display:none;">
-  <h2>過去ログ＆ランキング</h2>
-  <div id="logThreads"></div>
-</div>
+<!-- 投稿フォーム -->
+<form id="postForm">
+  <input type="text" id="postInput" placeholder="ここに書く" required>
+  <button type="submit">投稿</button>
+</form>
 
-<script>
-let threads = [
-  {title: "愚者が旅立つ", comments: [], created: new Date()},
-  {title: "戦車で挑む英雄", comments: [], created: new Date()}
-];
+<!-- 投稿表示 -->
+<ul id="postList"></ul>
 
-function displayThreads() {
-  const container = document.getElementById("threads");
-  container.innerHTML = "";
-  threads.forEach((thread, tIndex) => {
-    const div = document.createElement("div");
-    div.className = "thread";
-    div.innerHTML = `<h2>${thread.title}</h2>
-                     <input type="text" id="input-${tIndex}" placeholder="コメントを書いて1分以内に投稿"/>
-                     <button onclick="postComment(${tIndex})">投稿</button>
-                     <span id="timer-${tIndex}"></span>`;
-    
-    // コメントをいいね順に表示
-    thread.comments
-      .sort((a,b) => b.likes - a.likes)
-      .forEach((c, cIndex) => {
-        const comDiv = document.createElement("div");
-        comDiv.className = "comment";
-        comDiv.innerHTML = `${c.text} <button onclick="likeComment(${tIndex},${cIndex})">👍 ${c.likes}</button>`;
-        div.appendChild(comDiv);
-      });
-    container.appendChild(div);
-  });
-}
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-app.js";
+  import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-database.js";
 
-function createThread() {
-  const titleInput = document.getElementById("newThreadTitle");
-  const title = titleInput.value.trim();
-  if(title) {
-    threads.push({title:title, comments:[], created: new Date()});
-    titleInput.value = "";
-    displayThreads();
-  }
-}
+  // Firebase 設定
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdLmTIEgU3WNEN0Pr4fFNpQKjcYsmUXU8",
+    authDomain: "linkernation-online.firebaseapp.com",
+    projectId: "linkernation-online",
+    databaseURL: "https://linkernation-online-default-rtdb.firebaseio.com/",
+    storageBucket: "linkernation-online.appspot.com",
+    messagingSenderId: "398889265909",
+    appId: "1:398889265909:web:33f569fc04e98350d6b3bc",
+    measurementId: "G-BH272B3F45"
+  };
 
-let timers = {};
+  // Firebase 初期化
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
 
-function postComment(tIndex) {
-  const input = document.getElementById(`input-${tIndex}`);
-  const text = input.value.trim();
-  if(!text) return;
+  const postForm = document.getElementById("postForm");
+  const postInput = document.getElementById("postInput");
+  const postList = document.getElementById("postList");
 
-  if(timers[tIndex]) {
-    clearInterval(timers[tIndex].interval);
-  }
-
-  let timeLeft = 60;
-  document.getElementById(`timer-${tIndex}`).textContent = `残り時間: ${timeLeft}s`;
-  
-  timers[tIndex] = {interval: setInterval(() => {
-    timeLeft--;
-    document.getElementById(`timer-${tIndex}`).textContent = `残り時間: ${timeLeft}s`;
-    if(timeLeft <= 0) {
-      clearInterval(timers[tIndex].interval);
-      document.getElementById(`timer-${tIndex}`).textContent = `投稿時間終了`;
-    }
-  }, 1000)};
-
-  threads[tIndex].comments.push({text:text, likes:0, created: new Date()});
-  input.value = "";
-  displayThreads();
-}
-
-function likeComment(tIndex, cIndex) {
-  threads[tIndex].comments[cIndex].likes++;
-  displayThreads();
-}
-
-// 過去ログ＆ランキング表示
-function showLogs() {
-  const logDiv = document.getElementById("logs");
-  const container = document.getElementById("logThreads");
-  container.innerHTML = "";
-
-  // いいね合計順でスレッドをソート
-  const sortedThreads = threads.slice().sort((a,b) => {
-    const aLikes = a.comments.reduce((sum,c)=>sum+c.likes,0);
-    const bLikes = b.comments.reduce((sum,c)=>sum+c.likes,0);
-    return bLikes - aLikes;
+  // 投稿フォーム送信
+  postForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = postInput.value.trim();
+    if (text.length === 0) return;
+    push(ref(db, "posts"), {
+      content: text,
+      timestamp: Date.now()
+    });
+    postInput.value = "";
   });
 
-  sortedThreads.forEach(thread => {
-    const div = document.createElement("div");
-    div.className = "log-thread";
-    const totalLikes = thread.comments.reduce((sum,c)=>sum+c.likes,0);
-    div.innerHTML = `<h3>${thread.title}（👍合計 ${totalLikes}）</h3>`;
-    thread.comments
-      .sort((a,b) => b.likes - a.likes)
-      .forEach(c => {
-        const cTime = new Date(c.created).toLocaleTimeString();
-        const comDiv = document.createElement("div");
-        comDiv.className = "comment";
-        comDiv.textContent = `[${cTime}] ${c.text} 👍${c.likes}`;
-        div.appendChild(comDiv);
-      });
-    container.appendChild(div);
+  // データベースからリアルタイム取得
+  const postsRef = ref(db, "posts");
+  onValue(postsRef, (snapshot) => {
+    postList.innerHTML = "";
+    snapshot.forEach((childSnapshot) => {
+      const post = childSnapshot.val();
+      const li = document.createElement("li");
+      li.textContent = post.content;
+      postList.appendChild(li);
+    });
   });
-
-  logDiv.style.display = "block";
-}
-
-displayThreads();
 </script>
-
 </body>
 </html>
