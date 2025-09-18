@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>リンカーネイション・即興短編モック</title>
+<style>
+  body { font-family: monospace; background-color: #fdf6e3; color: #333; padding: 20px; }
+  h1 { color: #b58900; }
+  #tl { border: 1px solid #ccc; padding: 10px; max-height: 400px; overflow-y: auto; }
+  .post { border-bottom: 1px solid #ddd; padding: 5px 0; }
+  .hand { margin-top: 10px; }
+  button { margin: 2px; }
+  #timer { font-weight: bold; color: red; }
+</style>
+</head>
+<body>
+
+<h1>リンカーネイション・即興短編モック</h1>
+
+<section>
+  <button id="startGame">ゲームスタート</button>
+</section>
+
+<section id="gameArea" style="display:none;">
+  <h2>ストーリーTL</h2>
+  <div id="tl"></div>
+
+  <h2>手札</h2>
+  <div id="hand" class="hand"></div>
+
+  <h2>投稿</h2>
+  <div>
+    <textarea id="storyInput" rows="3" cols="50" placeholder="30秒以内に入力"></textarea><br>
+    <span id="timer">30</span>秒
+  </div>
+  <button id="postBtn">投稿</button>
+  <button id="giveUpBtn">降参</button>
+
+  <h2>ランキング（イイネ数順）</h2>
+  <div id="ranking"></div>
+</section>
+
+<script>
+let tlData = [];
+let rankingData = [];
+let handCards = [];
+let timer = 30;
+let timerInterval;
+
+const cards = ["騎士","クローバー","船","家","木","雲","蛇","棺","花束","鎌","鞭","鳥","子供","狐","熊","星","コウノトリ","犬","塔","庭園","山","道","ネズミ","ハート","指輪","本","手紙","紳士","淑女","百合","太陽","月","鍵","魚","錨","十字架"];
+const startGameBtn = document.getElementById('startGame');
+const gameArea = document.getElementById('gameArea');
+const tl = document.getElementById('tl');
+const handDiv = document.getElementById('hand');
+const storyInput = document.getElementById('storyInput');
+const postBtn = document.getElementById('postBtn');
+const giveUpBtn = document.getElementById('giveUpBtn');
+const timerSpan = document.getElementById('timer');
+const rankingDiv = document.getElementById('ranking');
+
+function startTimer() {
+  timer = 30;
+  timerSpan.textContent = timer;
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timer--;
+    timerSpan.textContent = timer;
+    if(timer <= 0){
+      clearInterval(timerInterval);
+      submitStory();
+    }
+  }, 1000);
+}
+
+function drawHand() {
+  handCards = [];
+  for(let i=0;i<2;i++){
+    const card = cards[Math.floor(Math.random()*cards.length)];
+    handCards.push(card);
+  }
+  handDiv.innerHTML = handCards.join(" | ");
+}
+
+function updateTL() {
+  tl.innerHTML = "";
+  tlData.forEach((item, idx)=>{
+    const div = document.createElement('div');
+    div.className = "post";
+    div.textContent = `[${idx+1}] ${item.text} (手札: ${item.cards.join(", ")}) イイネ:${item.likes}`;
+    tl.appendChild(div);
+  });
+}
+
+function updateRanking() {
+  rankingDiv.innerHTML = "";
+  const sorted = [...tlData].sort((a,b)=>b.likes - a.likes);
+  sorted.forEach((item, idx)=>{
+    const div = document.createElement('div');
+    div.textContent = `${idx+1}. ${item.text} (イイネ:${item.likes})`;
+    rankingDiv.appendChild(div);
+  });
+}
+
+function submitStory() {
+  clearInterval(timerInterval);
+  const text = storyInput.value.trim();
+  if(text.length === 0) return;
+  tlData.push({text:text, cards:[...handCards], likes: Math.floor(Math.random()*10)});
+  storyInput.value = "";
+  drawHand();
+  updateTL();
+  updateRanking();
+  startTimer();
+}
+
+startGameBtn.addEventListener('click', ()=>{
+  gameArea.style.display = 'block';
+  startGameBtn.style.display = 'none';
+  drawHand();
+  startTimer();
+});
+
+postBtn.addEventListener('click', submitStory);
+
+giveUpBtn.addEventListener('click', ()=>{
+  storyInput.value = "";
+  drawHand();
+  startTimer();
+});
+</script>
+
+</body>
+</html>
