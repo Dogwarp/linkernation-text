@@ -1,68 +1,45 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>リンカーネイション 簡易スレッド版</title>
+<!-- 観戦モードボタン -->
+<button id="spectateBtn" onclick="toggleSpectate()">
+  👁️ 観戦モード
+</button>
+
 <style>
-  body { font-family: "Yu Gothic", sans-serif; background:#fdf6e3; color:#333; padding:20px; }
-  h1 { color:#b58900; }
-  .post { border-bottom:1px solid #ccc; padding:5px; margin-bottom:5px; }
-  .like-btn { font-size:0.9em; margin-left:10px; cursor:pointer; }
-  #newPost { margin-bottom:20px; }
-  textarea { width:100%; height:60px; }
-  input[type="text"] { width:100%; }
+#spectateBtn {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  z-index: 1000;
+  background-color: #b58900;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  transition: all 0.2s ease;
+}
+#spectateBtn:hover {
+  background-color: #cb4b16;
+  transform: translateY(-2px);
+}
 </style>
-</head>
-<body>
-
-<h1>リンカーネイション 簡易スレッド版</h1>
-
-<div id="newPost">
-  <input type="text" id="postTitle" placeholder="タイトル">
-  <textarea id="postContent" placeholder="ここに投稿内容を書きます"></textarea>
-  <button onclick="addPost()">投稿</button>
-</div>
-
-<div id="posts"></div>
 
 <script>
-let postsContainer = document.getElementById('posts');
-
-function loadLikes() {
-  document.querySelectorAll('.post').forEach(post => {
-    let id = post.dataset.id;
-    let count = localStorage.getItem('likes-'+id) || 0;
-    post.querySelector('.like-count').textContent = count;
-  });
+let spectate = false;
+function toggleSpectate() {
+  spectate = !spectate;
+  const form = document.getElementById('newPost'); // 投稿フォームのIDに合わせる
+  const btn = document.getElementById('spectateBtn');
+  if(spectate) {
+    if(form) form.style.display = 'none';
+    btn.textContent = '✏️ 投稿モードに戻る';
+    console.log('観戦モード ON');
+  } else {
+    if(form) form.style.display = 'block';
+    btn.textContent = '👁️ 観戦モード';
+    console.log('観戦モード OFF');
+  }
 }
-
-function addPost() {
-  let title = document.getElementById('postTitle').value.trim();
-  let content = document.getElementById('postContent').value.trim();
-  if(!title && !content) return;
-  let id = Date.now();
-  let div = document.createElement('div');
-  div.className = 'post';
-  div.dataset.id = id;
-  div.innerHTML = `<strong>${title}</strong><br>${content}
-    <span class="like-btn" onclick="likePost(${id})">👍</span> 
-    <span class="like-count">0</span>`;
-  postsContainer.prepend(div);
-  document.getElementById('postTitle').value='';
-  document.getElementById('postContent').value='';
-}
-
-function likePost(id) {
-  let count = parseInt(localStorage.getItem('likes-'+id) || 0);
-  count++;
-  localStorage.setItem('likes-'+id, count);
-  loadLikes();
-}
-
-// ページロード時にいいね復元
-window.onload = loadLikes;
 </script>
-
-</body>
-</html>
