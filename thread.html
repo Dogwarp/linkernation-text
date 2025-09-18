@@ -1,3 +1,46 @@
+Skip to content
+Navigation Menu
+Dogwarp
+linkernation-text
+
+Type / to search
+Code
+Issues
+Pull requests
+Actions
+Projects
+Wiki
+Security
+Insights
+Settings
+Commit 4c7bfcc
+Dogwarp
+Dogwarp
+authored
+4 hours ago
+·
+·
+Verified
+Create startGame.txt
+main
+1 parent 
+38c0942
+ commit 
+4c7bfcc
+File tree
+Filter files…
+startGame.txt
+1 file changed
++134
+-0
+lines changed
+Search within code
+ 
+‎startGame.txt‎
++134
+Lines changed: 134 additions & 0 deletions
+Original file line number	Diff line number	Diff line change
+@@ -0,0 +1,134 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -15,20 +58,15 @@
 </style>
 </head>
 <body>
-
 <h1>リンカーネイション・即興短編モック</h1>
-
 <section>
   <button id="startGame">ゲームスタート</button>
 </section>
-
 <section id="gameArea" style="display:none;">
   <h2>ストーリーTL</h2>
   <div id="tl"></div>
-
   <h2>手札</h2>
   <div id="hand" class="hand"></div>
-
   <h2>投稿</h2>
   <div>
     <textarea id="storyInput" rows="3" cols="50" placeholder="30秒以内に入力"></textarea><br>
@@ -36,18 +74,15 @@
   </div>
   <button id="postBtn">投稿</button>
   <button id="giveUpBtn">降参</button>
-
   <h2>ランキング（イイネ数順）</h2>
   <div id="ranking"></div>
 </section>
-
 <script>
 let tlData = [];
 let rankingData = [];
 let handCards = [];
 let timer = 30;
 let timerInterval;
-
 const cards = ["騎士","クローバー","船","家","木","雲","蛇","棺","花束","鎌","鞭","鳥","子供","狐","熊","星","コウノトリ","犬","塔","庭園","山","道","ネズミ","ハート","指輪","本","手紙","紳士","淑女","百合","太陽","月","鍵","魚","錨","十字架"];
 const startGameBtn = document.getElementById('startGame');
 const gameArea = document.getElementById('gameArea');
@@ -58,7 +93,6 @@ const postBtn = document.getElementById('postBtn');
 const giveUpBtn = document.getElementById('giveUpBtn');
 const timerSpan = document.getElementById('timer');
 const rankingDiv = document.getElementById('ranking');
-
 function startTimer() {
   timer = 30;
   timerSpan.textContent = timer;
@@ -72,7 +106,6 @@ function startTimer() {
     }
   }, 1000);
 }
-
 function drawHand() {
   handCards = [];
   for(let i=0;i<2;i++){
@@ -81,7 +114,6 @@ function drawHand() {
   }
   handDiv.innerHTML = handCards.join(" | ");
 }
-
 function updateTL() {
   tl.innerHTML = "";
   tlData.forEach((item, idx)=>{
@@ -91,7 +123,6 @@ function updateTL() {
     tl.appendChild(div);
   });
 }
-
 function updateRanking() {
   rankingDiv.innerHTML = "";
   const sorted = [...tlData].sort((a,b)=>b.likes - a.likes);
@@ -101,7 +132,6 @@ function updateRanking() {
     rankingDiv.appendChild(div);
   });
 }
-
 function submitStory() {
   clearInterval(timerInterval);
   const text = storyInput.value.trim();
@@ -113,22 +143,26 @@ function submitStory() {
   updateRanking();
   startTimer();
 }
-
 startGameBtn.addEventListener('click', ()=>{
   gameArea.style.display = 'block';
   startGameBtn.style.display = 'none';
   drawHand();
   startTimer();
 });
-
 postBtn.addEventListener('click', submitStory);
-
 giveUpBtn.addEventListener('click', ()=>{
   storyInput.value = "";
   drawHand();
   startTimer();
 });
 </script>
-
 </body>
 </html>
+0 commit comments
+Comments
+0
+ (0)
+Comment
+You're not receiving notifications from this thread.
+
+R1 to R134 selected.  
