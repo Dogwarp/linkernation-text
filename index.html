@@ -1,18 +1,30 @@
-<h1>Linkernation</h1>
-<input id="threadTitle" placeholder="スレッドタイトルを入力">
-<button onclick="createThread()">スレ立て</button>
-<a href="threads.html">スレッド一覧へ</a>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Linkernation</title>
+</head>
+<body>
+  <h1>Linkernation</h1>
+  <p>新しい物語を始めよう。</p>
+  <input id="threadTitle" placeholder="スレッドタイトルを入力">
+  <button onclick="createThread()">スレ立て</button>
+  <br><br>
+  <a href="threads.html">スレッド一覧へ</a>
 
-<script>
-function createThread() {
-  const title = document.getElementById("threadTitle").value;
-  if (!title) return alert("タイトルを入力してください");
+  <script>
+  function createThread() {
+    const title = document.getElementById("threadTitle").value;
+    if (!title) return alert("タイトルを入力してください");
 
-  const threads = JSON.parse(localStorage.getItem("threads") || "[]");
-  const newThread = { id: Date.now(), title, posts: [] };
-  threads.push(newThread);
-  localStorage.setItem("threads", JSON.stringify(threads));
+    const threads = JSON.parse(localStorage.getItem("threads") || "[]");
+    const newThread = { id: Date.now(), title, posts: [] };
+    threads.push(newThread);
+    localStorage.setItem("threads", JSON.stringify(threads));
 
-  window.location.href = "threads.html";
-}
-</script>
+    window.location.href = "threads.html";
+  }
+  </script>
+</body>
+</html>
+
