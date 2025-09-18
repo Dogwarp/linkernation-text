@@ -1,14 +1,24 @@
-<h1>スレッド一覧</h1>
-<ul id="threadList"></ul>
-<a href="index.html">トップに戻る</a>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>スレッド一覧 - Linkernation</title>
+</head>
+<body>
+  <h1>スレッド一覧</h1>
+  <ul id="threadList"></ul>
+  <br>
+  <a href="index.html">トップに戻る</a>
 
-<script>
-const threads = JSON.parse(localStorage.getItem("threads") || "[]");
-const list = document.getElementById("threadList");
+  <script>
+  const threads = JSON.parse(localStorage.getItem("threads") || "[]");
+  const list = document.getElementById("threadList");
 
-threads.forEach(t => {
-  const li = document.createElement("li");
-  li.innerHTML = `<a href="thread.html?id=${t.id}">${t.title}</a>`;
-  list.appendChild(li);
-});
-</script>
+  threads.forEach(t => {
+    const li = document.createElement("li");
+    li.innerHTML = `<a href="thread.html?id=${t.id}">${t.title}</a>`;
+    list.appendChild(li);
+  });
+  </script>
+</body>
+</html>
