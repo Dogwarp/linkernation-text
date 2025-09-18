@@ -2,92 +2,85 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>リンカーネイション即興スレッドデモ</title>
+<title>リンカーネイション即興小説テスト</title>
 <style>
-  body { font-family: "Yu Gothic", sans-serif; background-color: #fdf6e3; padding: 20px; }
-  h1, h2 { color: #b58900; }
-  .thread { border: 1px solid #ccc; padding: 10px; margin-bottom: 20px; }
-  .comments { margin-top: 10px; }
-  button { margin: 5px 0; }
+body { font-family: "Yu Gothic", sans-serif; background:#fdf6e3; padding:20px; }
+h2 { color:#b58900; }
+.thread { border:1px solid #ccc; padding:10px; margin-bottom:10px; }
+.comment { margin-left:20px; border-top:1px dashed #ccc; padding:5px; }
+button { margin-top:5px; }
 </style>
 </head>
 <body>
 
-<h1>リンカーネイション即興スレッドデモ</h1>
+<h1>即興小説スレッド（テスト版）</h1>
 
-<button id="newThread">新しいスレッド作成</button>
+<div>
+  <input type="text" id="newThreadTitle" placeholder="スレッドタイトル">
+  <button onclick="addThread()">スレ立て</button>
+</div>
 
 <div id="threads"></div>
 
 <script>
-const majorArcana = ["愚者","魔術師","女教皇","女帝","皇帝","教皇","恋人","戦車","力","隠者","運命の輪","正義","吊るされた男","死神","節制","悪魔","塔","星","月","太陽","審判","世界"];
-let threads = [];
+// 保存用
+let threads = JSON.parse(localStorage.getItem("threads") || "[]");
 
-function getRandomArcana(n) {
-  let shuffled = [...majorArcana].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, n);
-}
-
-function createThread() {
-  const thread = {
-    id: threads.length,
-    arcana: getRandomArcana(3),
-    comments: []
-  };
-  threads.push(thread);
-  renderThreads();
-}
-
+// ページ初期化で復元
 function renderThreads() {
-  const container = document.getElementById('threads');
-  container.innerHTML = '';
-  threads.forEach(thread => {
-    const div = document.createElement('div');
-    div.className = 'thread';
-    div.innerHTML = `
-      <h2>スレッド #${thread.id}</h2>
-      <p>配られた大アルカナ: ${thread.arcana.join(', ')}</p>
-      <div class="comments">
-        ${thread.comments.map(c => `<p>${c}</p>`).join('')}
-      </div>
-      <textarea id="commentInput${thread.id}" placeholder="1分以内に投稿"></textarea><br>
-      <button onclick="submitComment(${thread.id})">投稿</button>
-      <span id="timer${thread.id}"></span>
-    `;
-    container.appendChild(div);
-  });
+    const container = document.getElementById("threads");
+    container.innerHTML = "";
+    threads.forEach((thread, tIndex) => {
+        const div = document.createElement("div");
+        div.className = "thread";
+        div.innerHTML = `<h2>${thread.title}</h2>
+                         <input type="text" placeholder="コメント" id="comment-${tIndex}">
+                         <button onclick="addComment(${tIndex})">コメント</button>`;
+        // コメント表示
+        thread.comments.forEach((c, cIndex) => {
+            const comDiv = document.createElement("div");
+            comDiv.className = "comment";
+            comDiv.innerHTML = `${c.text} <button onclick="likeComment(${tIndex},${cIndex})">👍 ${c.likes}</button>`;
+            div.appendChild(comDiv);
+        });
+        container.appendChild(div);
+    });
 }
 
-function submitComment(threadId) {
-  const textarea = document.getElementById(`commentInput${threadId}`);
-  if (!textarea.value.trim()) return;
-  threads[threadId].comments.push(textarea.value.trim());
-  textarea.value = '';
-  renderThreads();
+// スレ立て
+function addThread() {
+    const titleInput = document.getElementById("newThreadTitle");
+    const title = titleInput.value.trim();
+    if(!title) return;
+    threads.push({title:title, comments:[]});
+    titleInput.value = "";
+    saveAndRender();
 }
 
-function startTimer(threadId) {
-  let timeLeft = 60;
-  const timerSpan = document.getElementById(`timer${threadId}`);
-  const interval = setInterval(() => {
-    if (timeLeft <= 0) {
-      clearInterval(interval);
-      document.getElementById(`commentInput${threadId}`).disabled = true;
-      timerSpan.textContent = "時間切れ";
-    } else {
-      timerSpan.textContent = `残り ${timeLeft}s`;
-      timeLeft--;
-    }
-  }, 1000);
+// コメント追加
+function addComment(tIndex) {
+    const input = document.getElementById(`comment-${tIndex}`);
+    const text = input.value.trim();
+    if(!text) return;
+    threads[tIndex].comments.push({text:text, likes:0});
+    input.value = "";
+    saveAndRender();
 }
 
-document.getElementById('newThread').addEventListener('click', () => {
-  createThread();
-  const newId = threads.length -1;
-  startTimer(newId);
-});
+// いいね
+function likeComment(tIndex, cIndex){
+    threads[tIndex].comments[cIndex].likes++;
+    saveAndRender();
+}
 
+// 保存と再描画
+function saveAndRender(){
+    localStorage.setItem("threads", JSON.stringify(threads));
+    renderThreads();
+}
+
+// 初期描画
+renderThreads();
 </script>
 
 </body>
