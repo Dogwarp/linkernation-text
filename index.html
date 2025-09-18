@@ -3,71 +3,69 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>リンカーネイション 簡易スレッドデモ</title>
+<title>リンカーネイション即興小説</title>
 <style>
-body { font-family: "Yu Gothic", sans-serif; background-color: #fdf6e3; color: #333; padding: 20px; }
-h1 { color: #b58900; }
-#spectateBtn {
-  position: fixed;
-  top: 15px;
-  right: 15px;
-  z-index: 1000;
-  background-color: #b58900;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 14px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-  transition: all 0.2s ease;
-}
-#spectateBtn:hover { background-color: #cb4b16; transform: translateY(-2px); }
-#newPost { margin-top: 20px; }
-.post { border-bottom: 1px solid #ccc; padding: 5px 0; }
-.postTitle { font-weight: bold; }
+  body { font-family: sans-serif; padding: 20px; background: #fdf6e3; }
+  h1 { color: #b58900; }
+  .thread { border: 1px solid #ccc; padding: 10px; margin-bottom: 20px; }
+  .comments { margin-top: 10px; padding-left: 20px; }
+  .comment { border-top: 1px dashed #ccc; padding: 5px 0; }
 </style>
 </head>
 <body>
 
-<h1>リンカーネイション 簡易スレッドデモ</h1>
-<button id="spectateBtn" onclick="toggleSpectate()">👁️ 観戦モード</button>
+<h1>リンカーネイション即興小説（デモ）</h1>
 
-<div id="thread">
-  <!-- 投稿がここに追加される -->
-</div>
+<section>
+<h2>新規スレッド作成</h2>
+<input type="text" id="newThreadTitle" placeholder="スレッドタイトル">
+<button onclick="createThread()">作成</button>
+</section>
 
-<form id="newPost" onsubmit="submitPost(event)">
-  <input type="text" id="title" placeholder="タイトルを入力 (1行推奨)" style="width: 70%;" required>
-  <button type="submit">投稿</button>
-</form>
+<section id="threadsContainer">
+<!-- スレッドがここに追加される -->
+</section>
 
 <script>
-let spectate = false;
+function createThread() {
+    const titleInput = document.getElementById('newThreadTitle');
+    const title = titleInput.value.trim();
+    if (!title) return alert('タイトルを入力してください');
 
-function toggleSpectate() {
-  spectate = !spectate;
-  const form = document.getElementById('newPost');
-  const btn = document.getElementById('spectateBtn');
-  if(spectate) {
-    form.style.display = 'none';
-    btn.textContent = '✏️ 投稿モードに戻る';
-  } else {
-    form.style.display = 'block';
-    btn.textContent = '👁️ 観戦モード';
-  }
-}
+    // スレッド要素
+    const threadDiv = document.createElement('div');
+    threadDiv.className = 'thread';
 
-function submitPost(e) {
-  e.preventDefault();
-  const titleInput = document.getElementById('title');
-  const thread = document.getElementById('thread');
-  const post = document.createElement('div');
-  post.className = 'post';
-  post.innerHTML = `<div class="postTitle">${titleInput.value}</div>`;
-  thread.prepend(post); // 新しい投稿を上に追加
-  titleInput.value = '';
+    const titleElem = document.createElement('h3');
+    titleElem.textContent = title;
+    threadDiv.appendChild(titleElem);
+
+    // コメントリスト
+    const commentsDiv = document.createElement('div');
+    commentsDiv.className = 'comments';
+    threadDiv.appendChild(commentsDiv);
+
+    // コメント投稿フォーム
+    const commentInput = document.createElement('input');
+    commentInput.type = 'text';
+    commentInput.placeholder = 'コメントを入力';
+    const commentBtn = document.createElement('button');
+    commentBtn.textContent = '投稿';
+    commentBtn.onclick = function() {
+        const commentText = commentInput.value.trim();
+        if (!commentText) return;
+        const commentElem = document.createElement('div');
+        commentElem.className = 'comment';
+        commentElem.textContent = commentText;
+        commentsDiv.appendChild(commentElem);
+        commentInput.value = '';
+    };
+
+    threadDiv.appendChild(commentInput);
+    threadDiv.appendChild(commentBtn);
+
+    document.getElementById('threadsContainer').prepend(threadDiv);
+    titleInput.value = '';
 }
 </script>
 
