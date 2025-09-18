@@ -1,147 +1,18 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>リンカーネイション（モックアップ完成版）</title>
-<style>
-  body { font-family: "Yu Gothic", sans-serif; background-color: #fdf6e3; color: #333; line-height: 1.6; padding: 20px; }
-  h1,h2,h3 { color: #b58900; }
-  pre { background-color: #eee8d5; padding: 10px; border-radius: 5px; overflow-x: auto; }
-  .hand { margin-bottom: 10px; }
-  .card { margin-right: 10px; }
-  table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-  th, td { border: 1px solid #ccc; padding: 5px 10px; text-align: center; }
-  th { background-color: #eee8d5; }
-</style>
-</head>
-<body>
-
-<h1>リンカーネイション（モックアップ完成版）</h1>
-
-<section>
-<h2>世界情勢カード</h2>
-<p>現在の世界情勢: <span id="worldCard"></span></p>
-</section>
-
-<section>
-<h2>手札（チェックボックスで選択）</h2>
-<div class="hand" id="playerHand"></div>
-<p>選択中のカード: <span id="currentRole"></span></p>
-
-<label>物語:</label>
-<input type="text" id="playerStory" placeholder="ここに物語を入力">
-<br>
-<label>駆け引き:</label>
-<select id="playerMove">
-  <option value="なし">なし</option>
-  <option value="取引">運命の取引</option>
-  <option value="強奪">運命の強奪</option>
-</select>
-<label>対象AI:</label>
-<select id="targetAI">
-  <option value="0">AI_アルタ</option>
-  <option value="1">AI_ベラ</option>
-</select>
-<br>
-<button onclick="playTurn()">ターン実行</button>
-</section>
-
-<section>
-<h2>プレイログ</h2>
-<pre id="log"></pre>
-</section>
+<h1>Linkernation</h1>
+<input id="threadTitle" placeholder="スレッドタイトルを入力">
+<button onclick="createThread()">スレ立て</button>
+<a href="threads.html">スレッド一覧へ</a>
 
 <script>
-// カード名データ
-const rnmNames = ["騎士","クローバー","船","家","木","雲","蛇","棺","花束","鎌","鞭","鳥","子供","狐","熊","星","コウノトリ","犬","塔","庭園","山","道","ネズミ","ハート","指輪","本","手紙","紳士","淑女","百合","太陽","月","鍵","魚","錨","十字架"];
-const tarotNames = ["愚者","魔術師","女教皇","女帝","皇帝","教皇","恋人","戦車","力","隠者","運命の輪","正義","吊るされた男","死神","節制","悪魔","塔","星","月","太陽","審判","世界"];
+function createThread() {
+  const title = document.getElementById("threadTitle").value;
+  if (!title) return alert("タイトルを入力してください");
 
-// デッキ・手札初期化
-let deck = Array.from({length:36},(_,i)=>i+1);
-function shuffle(a){ return a.sort(()=>Math.random()-0.5);}
-deck = shuffle(deck);
-let playerHand = deck.splice(0,5);
-let aiHands = [deck.splice(0,5), deck.splice(0,5)];
-let playerFragments = 0, aiFragments=[0,0];
-let turn=1;
-let logEl = document.getElementById("log");
-const aiNames=["AI_アルタ","AI_ベラ"];
-let currentWorldCard = tarotNames[Math.floor(Math.random()*tarotNames.length)];
-document.getElementById("worldCard").innerText = currentWorldCard;
+  const threads = JSON.parse(localStorage.getItem("threads") || "[]");
+  const newThread = { id: Date.now(), title, posts: [] };
+  threads.push(newThread);
+  localStorage.setItem("threads", JSON.stringify(threads));
 
-// 手札表示
-function renderHand() {
-  const handEl = document.getElementById("playerHand");
-  handEl.innerHTML = "";
-  playerHand.forEach((num,i)=>{
-    const cb = document.createElement("input");
-    cb.type="checkbox";
-    cb.id="card"+i;
-    cb.value=num;
-    cb.className="cardCB";
-    cb.onchange = updateCurrentRole;
-    const label = document.createElement("label");
-    label.htmlFor = "card"+i;
-    label.innerText=`${num}: ${rnmNames[num-1]}`;
-    handEl.appendChild(cb);
-    handEl.appendChild(label);
-    handEl.appendChild(document.createTextNode(" "));
-  });
+  window.location.href = "threads.html";
 }
-function updateCurrentRole(){
-  const selected = Array.from(document.querySelectorAll(".cardCB:checked")).map(cb=>parseInt(cb.value));
-  document.getElementById("currentRole").innerText = selected.map(i=>rnmNames[i-1]).join("＋");
-}
-
-function cardName(i){ return rnmNames[i-1]; }
-
-// 擬似AI物語生成
-function generateAIStory(aiName, aiCards, worldCard){
-  const actions = ["冒険した","探索した","守護した","挑戦した","発見した"];
-  const adjectives = ["神秘的な","危険な","輝かしい","孤独な","不思議な"];
-  const items = ["秘宝","鍵","光","力","希望"];
-  const cardStr = aiCards.map(i=>cardName(i)).join("＋");
-  const story = `${aiName}は${adjectives[Math.floor(Math.random()*adjectives.length)]}${items[Math.floor(Math.random()*items.length)]}を求めて、${actions[Math.floor(Math.random()*actions.length)]}。`;
-  const creativity=Math.floor(Math.random()*6);
-  const persuasiveness=Math.floor(Math.random()*4);
-  const fit=Math.floor(Math.random()*3);
-  return {story, cardStr, creativity, persuasiveness, fit};
-}
-
-// ターン実行
-function playTurn(){
-  const sel = Array.from(document.querySelectorAll(".cardCB:checked")).map(cb=>parseInt(cb.value));
-  if(sel.length<2){ alert("役は2枚以上選んでください"); return;}
-  const story = document.getElementById("playerStory").value || "(物語なし)";
-  const move = document.getElementById("playerMove").value;
-  const target = parseInt(document.getElementById("targetAI").value);
-  const cardStr = sel.map(i=>cardName(i)).join("＋");
-  const creativity = Math.floor(Math.random()*6);
-  const persuasiveness = Math.floor(Math.random()*4);
-  const fit = Math.floor(Math.random()*3);
-  playerFragments += creativity + persuasiveness + fit;
-
-  logEl.textContent += `--- 第${turn}ターン ---\n`;
-  logEl.textContent += `Dogwarp: 役【${cardStr}】\n物語: ${story}\n得点: 創造性${creativity}、説得力${persuasiveness}、適合性${fit}\n運命の欠片: ${playerFragments}\n`;
-
-  // AIターン
-  aiHands.forEach((hand,i)=>{
-    const ai = generateAIStory(aiNames[i], hand, currentWorldCard);
-    aiFragments[i] += ai.creativity + ai.persuasiveness + ai.fit;
-    logEl.textContent += `${aiNames[i]}: 役【${ai.cardStr}】\n物語: ${ai.story}\n得点: 創造性${ai.creativity}、説得力${ai.persuasiveness}、適合性${ai.fit}\n運命の欠片: ${aiFragments[i]}\n`;
-  });
-
-  // 世界情勢更新
-  currentWorldCard = tarotNames[Math.floor(Math.random()*tarotNames.length)];
-  document.getElementById("worldCard").innerText = currentWorldCard;
-  logEl.textContent += `次の世界情勢: 【${currentWorldCard}】\n\n`;
-  logEl.scrollTop = logEl.scrollHeight;
-  turn++;
-}
-
-renderHand();
 </script>
-
-</body>
-</html>
