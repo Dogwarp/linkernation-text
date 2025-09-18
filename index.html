@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>リンカーネイション（テキスト版）</title>
+<style>
+  body { font-family: "Yu Gothic", sans-serif; background-color: #fdf6e3; color: #333; line-height: 1.6; padding: 20px; }
+  h1, h2, h3 { color: #b58900; }
+  pre { background-color: #eee8d5; padding: 10px; border-radius: 5px; overflow-x: auto; }
+  code { font-family: monospace; }
+  section { margin-bottom: 30px; }
+</style>
+</head>
+<body>
+
+<h1>リンカーネイション（テキスト版）</h1>
+
+<section>
+<h2>概要</h2>
+<p>AI GMと一緒に遊ぶ物語生成ボードゲームです。手札から役を作り、物語を語って「運命の欠片」を集めましょう。1人でも遊べます。AIプレイヤーは自動生成され、駆け引きや物語も考慮します。</p>
+</section>
+
+<section>
+<h2>遊び方</h2>
+<ol>
+<li>プレイヤー人数と名前を決める。AIプレイヤーを必要数補充（1〜3人）。</li>
+<li>手札5枚を各プレイヤーに配布（ルノルマン36枚、大アルカナ22枚）。</li>
+<li>AI GMが世界情勢カード（大アルカナ）を発表。</li>
+<li>プレイヤーは手札で役を作り、物語を語る。駆け引きも可能。</li>
+<li>AIプレイヤーも自動で役・物語・駆け引きを生成。</li>
+<li>判定：創造性（0〜5点）、説得力（0〜3点）、適合性（0〜2点）。運命の欠片を獲得。</li>
+<li>山札が尽きた時点で最も欠片を集めたプレイヤーが勝利。</li>
+</ol>
+</section>
+
+<section>
+<h2>プレイヤー入力例</h2>
+<pre>
+[プレイヤー名]のターン
+私の役は、[ルノルマンカード名]、[ルノルマンカード名]です。
+この役を【[役名]】と名付けます。
+この役が、世界情勢【大アルカナカード名】と結びつく物語を語ります：
+[物語]
+私は[相手プレイヤー名]に『運命の強奪』を仕掛けます。
+[物語]
+</pre>
+<p>※駆け引きがない場合は最後の2行を省略可能</p>
+</section>
+
+<section>
+<h2>AI GM用プロンプト（コピペ用）</h2>
+<pre>
+あなたはボードゲーム「リンカーネイション」のAI GMです。
+プレイヤーの行動を促し、ターン進行、物語判定、駆け引き、得点処理を自動で行います。
+AIプレイヤーは1〜3人自動生成し、手札と世界情勢を考慮して役と物語を作ります。
+...
+</pre>
+</section>
+
+<section>
+<h2>著作権・利用規約</h2>
+<p>©2025 ノルシカ／リンカーネイション<br>
+個人利用・非営利利用は自由。商用利用は要相談。カードデザイン・画像素材は自作推奨。</p>
+</section>
+
+</body>
+</html>
