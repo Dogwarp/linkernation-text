@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>リンカーネイション 即興小説デモ v2</title>
+<title>リンカーネイション 即興小説バトル v3</title>
 <style>
   body { font-family: "Yu Gothic", sans-serif; background-color: #fdf6e3; padding: 20px; }
   h1 { color: #b58900; }
   .story { border:1px solid #ccc; margin-bottom:10px; padding:10px; }
-  .story-title { font-weight:bold; }
+  .story-title { font-weight:bold; cursor:pointer; }
   .cards, .hand { margin:5px 0; }
   button { margin:2px; }
 </style>
 </head>
 <body>
-<h1>リンカーネイション 即興小説デモ v2</h1>
+<h1>リンカーネイション 即興小説バトル v3</h1>
 
 <div>
   <button onclick="startNewStory()">新スレッド作成</button>
@@ -23,6 +23,7 @@
 <div id="stories"></div>
 
 <div id="handContainer" style="display:none;">
+  <div>スレッド: <span id="currentStoryTitle"></span></div>
   <div>大アルカナお題: <span id="majorCards"></span></div>
   <div class="hand">手札: <span id="handCards"></span></div>
   <textarea id="storyInput" rows="2" cols="50" placeholder="ここに続きの文章を書きます（1分以内）"></textarea><br>
@@ -53,10 +54,12 @@ let majorHand = [];
 let currentStoryId = null;
 let timerInterval = null;
 let timeLeft = 60;
+let currentStoryTitle = "";
 
 const majorArcana = ["愚者","魔術師","女教皇","女帝","皇帝","教皇","恋人","戦車","力","隠者","運命の輪","正義","吊るされた男","死神","節制","悪魔","塔","星","月","太陽","審判","世界"];
 const minorArcana = ["騎士","クローバー","船","家","木","雲","蛇","棺","花束","鎌","鞭","鳥","子供","狐","熊","星","コウノトリ","犬","塔","庭園","山","道","ネズミ","ハート","指輪","本","手紙","紳士","淑女","百合","太陽","月","鍵","魚","錨","十字架"];
 
+// --- 新規スレッド ---
 function startNewStory(){
   const title = prompt("スレッドタイトルを入力してください");
   if(!title) return;
@@ -64,6 +67,7 @@ function startNewStory(){
   currentStoryId = db.ref('stories').push().key;
   hand = pickCards(5);
   majorHand = pickMajor(3);
+  currentStoryTitle = title;
 
   db.ref('stories/'+currentStoryId).set({
     title: title,
@@ -73,35 +77,31 @@ function startNewStory(){
     contents: []
   });
 
+  showHand();
+}
+
+// --- 既存スレッドに連鎖投稿 ---
+function continueStory(storyId, title){
+  currentStoryId = storyId;
+  currentStoryTitle = title;
+  hand = pickCards(5);
+  majorHand = pickMajor(3);
+  showHand();
+}
+
+function showHand(){
   document.getElementById("handContainer").style.display = "block";
   document.getElementById("handCards").innerText = hand.join(", ");
   document.getElementById("majorCards").innerText = majorHand.join(", ");
+  document.getElementById("currentStoryTitle").innerText = currentStoryTitle;
   startTimer();
-  renderStories();
 }
 
-function pickCards(n){
-  let arr = [];
-  for(let i=0;i<n;i++){
-    arr.push(minorArcana[Math.floor(Math.random()*minorArcana.length)]);
-  }
-  return arr;
-}
-
-function pickMajor(n){
-  let arr = [];
-  let copy = [...majorArcana];
-  for(let i=0;i<n;i++){
-    const idx = Math.floor(Math.random()*copy.length);
-    arr.push(copy[idx]);
-    copy.splice(idx,1);
-  }
-  return arr;
-}
-
+// --- 投稿処理 ---
 function submitStory(){
   const text = document.getElementById("storyInput").value;
   if(!text) return alert("1文字以上書いてください");
+
   const newPost = {
     text: text,
     votes: 0,
@@ -120,6 +120,7 @@ function skipTurn(){
   document.getElementById("handContainer").style.display = "none";
 }
 
+// --- タイマー ---
 function startTimer(){
   timeLeft = 60;
   document.getElementById("timer").innerText = timeLeft;
@@ -138,11 +139,32 @@ function stopTimer(){
   clearInterval(timerInterval);
 }
 
+// --- いいね ---
 function vote(storyId, contentId){
   const ref = db.ref(`stories/${storyId}/contents/${contentId}/votes`);
   ref.transaction(v => (v||0)+1);
 }
 
+// --- カード選択 ---
+function pickCards(n){
+  let arr = [];
+  for(let i=0;i<n;i++){
+    arr.push(minorArcana[Math.floor(Math.random()*minorArcana.length)]);
+  }
+  return arr;
+}
+function pickMajor(n){
+  let arr = [];
+  let copy = [...majorArcana];
+  for(let i=0;i<n;i++){
+    const idx = Math.floor(Math.random()*copy.length);
+    arr.push(copy[idx]);
+    copy.splice(idx,1);
+  }
+  return arr;
+}
+
+// --- スレッド表示 ---
 function renderStories(){
   db.ref('stories').once('value',snapshot=>{
     const storiesDiv = document.getElementById("stories");
@@ -155,7 +177,7 @@ function renderStories(){
     sorted.forEach(([id,story])=>{
       const div = document.createElement("div");
       div.className = "story";
-      div.innerHTML = `<div class="story-title">${story.title} [手札: ${story.cards.join(", ")}] [お題: ${story.major.join(", ")}]</div>`;
+      div.innerHTML = `<div class="story-title" onclick="continueStory('${id}','${story.title}')">${story.title} [手札: ${story.cards.join(", ")}] [お題: ${story.major.join(", ")}]</div>`;
       
       const contents = Object.entries(story.contents||{}).sort((a,b)=>b[1].votes - a[1].votes);
       contents.forEach(([cid,c])=>{
