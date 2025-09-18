@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>リンカーネイション（ブラウザ版）</title>
+<title>リンカーネイション（駆け引き付き）</title>
 <style>
   body { font-family: "Yu Gothic", sans-serif; background-color: #fdf6e3; color: #333; line-height: 1.6; padding: 20px; }
   h1,h2 { color: #b58900; }
   pre { background-color: #eee8d5; padding: 10px; border-radius: 5px; overflow-x: auto; }
-  button { margin: 5px; padding: 5px 10px; }
+  button, select, input { margin: 5px; padding: 5px 10px; }
   .hand { margin-bottom: 10px; }
 </style>
 </head>
 <body>
 
-<h1>リンカーネイション（ブラウザ版）</h1>
+<h1>リンカーネイション（駆け引き付きブラウザ版）</h1>
 
 <section>
 <h2>プレイヤー: Dogwarp</h2>
@@ -24,6 +24,18 @@
 <br>
 <label>物語:</label>
 <input type="text" id="playerStory" placeholder="ここに物語を入力">
+<br>
+<label>駆け引き:</label>
+<select id="playerMove">
+  <option value="なし">なし</option>
+  <option value="取引">運命の取引</option>
+  <option value="強奪">運命の強奪</option>
+</select>
+<label>対象AI:</label>
+<select id="targetAI">
+  <option value="0">AI_アルタ</option>
+  <option value="1">AI_ベラ</option>
+</select>
 <br>
 <button onclick="playTurn()">ターン実行</button>
 </section>
@@ -37,11 +49,11 @@
 // カードデータ
 const rnmCards = ["騎士","クローバー","船","家","木","雲","蛇","棺","花束","鎌","鞭","鳥","子供","狐","熊","星","コウノトリ","犬","塔","庭園","山","道","ネズミ","ハート","指輪","本","手紙","紳士","淑女","百合","太陽","月","鍵","魚","錨","十字架"];
 const tarotCards = ["愚者","魔術師","女教皇","女帝","皇帝","教皇","恋人","戦車","力","隠者","運命の輪","正義","吊るされた男","死神","節制","悪魔","塔","星","月","太陽","審判","世界"];
-let playerHand = [], aiHands = [], aiNames = ["AI_アルタ","AI_ベラ"], playerScore = 0, aiScores = [0,0], playerFragments = 0, aiFragments = [0,0];
+let playerHand = [], aiHands = [], aiNames = ["AI_アルタ","AI_ベラ"], playerFragments = 0, aiFragments = [0,0];
 const logEl = document.getElementById("log");
 
 // ランダムカード配布
-function drawCards(n) {
+function drawCards(n){
   let deck = Array.from({length:36},(_,i)=>i+1);
   deck.sort(()=>Math.random()-0.5);
   return deck.slice(0,n);
@@ -53,8 +65,7 @@ aiHands = [drawCards(5), drawCards(5)];
 document.getElementById("playerHand").innerText = "手札: " + playerHand.map(i=>rnmCards[i-1]).join(", ");
 
 // ターン実行
-function playTurn() {
-  // 世界情勢カード
+function playTurn(){
   const worldCard = tarotCards[Math.floor(Math.random()*tarotCards.length)];
 
   // プレイヤー入力
@@ -94,6 +105,22 @@ function playTurn() {
     logEl.textContent += `得点: 創造性${aiCreativity}点、説得力${aiPersuasion}点、適合性${aiFit}点\n`;
     logEl.textContent += `運命の欠片: ${aiFragments[idx]}枚\n\n`;
   });
+
+  // 駆け引き判定
+  const move = document.getElementById("playerMove").value;
+  const target = parseInt(document.getElementById("targetAI").value);
+  if(move !== "なし"){
+    let success = Math.random() < 0.6; // 成功確率60%
+    if(move === "強奪") success = Math.random() < 0.5; // 強奪は50%
+    if(success && aiFragments[target]>0){
+      aiFragments[target]--;
+      playerFragments++;
+      logEl.textContent += `駆け引き成功！Dogwarpは${aiNames[target]}から運命の欠片1枚獲得。\n\n`;
+    } else {
+      if(playerFragments>0) playerFragments--;
+      logEl.textContent += `駆け引き失敗…Dogwarpの運命の欠片1枚失う。\n\n`;
+    }
+  }
 
   // ターン後リセット
   document.getElementById("playerCards").value = "";
