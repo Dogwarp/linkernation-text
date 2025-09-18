@@ -2,85 +2,65 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>リンカーネイション即興小説テスト</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>リンカーネイション 即興スレッド</title>
 <style>
-body { font-family: "Yu Gothic", sans-serif; background:#fdf6e3; padding:20px; }
-h2 { color:#b58900; }
-.thread { border:1px solid #ccc; padding:10px; margin-bottom:10px; }
-.comment { margin-left:20px; border-top:1px dashed #ccc; padding:5px; }
-button { margin-top:5px; }
+  body { font-family: "Yu Gothic", sans-serif; background-color: #fdf6e3; padding: 20px; }
+  h1 { color: #b58900; }
+  .thread { border: 1px solid #ccc; padding: 10px; margin-bottom: 20px; }
+  .comment { margin-left: 20px; padding: 5px; border-bottom: 1px dashed #ccc; }
+  button { margin-left: 10px; }
 </style>
 </head>
 <body>
 
-<h1>即興小説スレッド（テスト版）</h1>
-
-<div>
-  <input type="text" id="newThreadTitle" placeholder="スレッドタイトル">
-  <button onclick="addThread()">スレ立て</button>
-</div>
-
+<h1>リンカーネイション 即興スレッド</h1>
 <div id="threads"></div>
 
 <script>
-// 保存用
-let threads = JSON.parse(localStorage.getItem("threads") || "[]");
+let threads = [
+  {title: "愚者が旅立つ", comments: [{text:"最初の一歩", likes:0},{text:"ワクワク感", likes:0}]},
+  {title: "戦車で挑む英雄", comments: [{text:"スピード感", likes:0},{text:"戦いの予感", likes:0}]}
+];
 
-// ページ初期化で復元
-function renderThreads() {
-    const container = document.getElementById("threads");
-    container.innerHTML = "";
-    threads.forEach((thread, tIndex) => {
-        const div = document.createElement("div");
-        div.className = "thread";
-        div.innerHTML = `<h2>${thread.title}</h2>
-                         <input type="text" placeholder="コメント" id="comment-${tIndex}">
-                         <button onclick="addComment(${tIndex})">コメント</button>`;
-        // コメント表示
-        thread.comments.forEach((c, cIndex) => {
-            const comDiv = document.createElement("div");
-            comDiv.className = "comment";
-            comDiv.innerHTML = `${c.text} <button onclick="likeComment(${tIndex},${cIndex})">👍 ${c.likes}</button>`;
-            div.appendChild(comDiv);
-        });
-        container.appendChild(div);
-    });
+function displayThreads() {
+  const container = document.getElementById("threads");
+  container.innerHTML = "";
+  threads.forEach((thread, tIndex) => {
+    const div = document.createElement("div");
+    div.className = "thread";
+    div.innerHTML = `<h2>${thread.title}</h2>
+                     <input type="text" id="input-${tIndex}" placeholder="コメントを書いて30秒以内に投稿"/>
+                     <button onclick="postComment(${tIndex})">投稿</button>`;
+    // コメントをいいね順に表示
+    thread.comments
+      .sort((a,b) => b.likes - a.likes)
+      .forEach((c, cIndex) => {
+        const comDiv = document.createElement("div");
+        comDiv.className = "comment";
+        comDiv.innerHTML = `${c.text} <button onclick="likeComment(${tIndex},${cIndex})">👍 ${c.likes}</button>`;
+        div.appendChild(comDiv);
+      });
+    container.appendChild(div);
+  });
 }
 
-// スレ立て
-function addThread() {
-    const titleInput = document.getElementById("newThreadTitle");
-    const title = titleInput.value.trim();
-    if(!title) return;
-    threads.push({title:title, comments:[]});
-    titleInput.value = "";
-    saveAndRender();
-}
-
-// コメント追加
-function addComment(tIndex) {
-    const input = document.getElementById(`comment-${tIndex}`);
-    const text = input.value.trim();
-    if(!text) return;
+function postComment(tIndex) {
+  const input = document.getElementById(`input-${tIndex}`);
+  const text = input.value.trim();
+  if(text) {
     threads[tIndex].comments.push({text:text, likes:0});
     input.value = "";
-    saveAndRender();
+    displayThreads();
+  }
 }
 
-// いいね
-function likeComment(tIndex, cIndex){
-    threads[tIndex].comments[cIndex].likes++;
-    saveAndRender();
+function likeComment(tIndex, cIndex) {
+  threads[tIndex].comments[cIndex].likes++;
+  displayThreads();
 }
 
-// 保存と再描画
-function saveAndRender(){
-    localStorage.setItem("threads", JSON.stringify(threads));
-    renderThreads();
-}
-
-// 初期描画
-renderThreads();
+displayThreads();
 </script>
 
 </body>
