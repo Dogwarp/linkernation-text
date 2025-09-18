@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>リンカーネイション（駆け引き付き）</title>
+<title>リンカーネイション（完全版）</title>
 <style>
   body { font-family: "Yu Gothic", sans-serif; background-color: #fdf6e3; color: #333; line-height: 1.6; padding: 20px; }
   h1,h2 { color: #b58900; }
@@ -14,7 +14,7 @@
 </head>
 <body>
 
-<h1>リンカーネイション（駆け引き付きブラウザ版）</h1>
+<h1>リンカーネイション（完全版）</h1>
 
 <section>
 <h2>プレイヤー: Dogwarp</h2>
@@ -47,84 +47,107 @@
 
 <script>
 // カードデータ
-const rnmCards = ["騎士","クローバー","船","家","木","雲","蛇","棺","花束","鎌","鞭","鳥","子供","狐","熊","星","コウノトリ","犬","塔","庭園","山","道","ネズミ","ハート","指輪","本","手紙","紳士","淑女","百合","太陽","月","鍵","魚","錨","十字架"];
-const tarotCards = ["愚者","魔術師","女教皇","女帝","皇帝","教皇","恋人","戦車","力","隠者","運命の輪","正義","吊るされた男","死神","節制","悪魔","塔","星","月","太陽","審判","世界"];
-let playerHand = [], aiHands = [], aiNames = ["AI_アルタ","AI_ベラ"], playerFragments = 0, aiFragments = [0,0];
-const logEl = document.getElementById("log");
+const rnmCards = Array.from({length:36},(_,i)=>i+1);
+const tarotCards = Array.from({length:22},(_,i)=>i+0);
+const rnmNames = ["騎士","クローバー","船","家","木","雲","蛇","棺","花束","鎌","鞭","鳥","子供","狐","熊","星","コウノトリ","犬","塔","庭園","山","道","ネズミ","ハート","指輪","本","手紙","紳士","淑女","百合","太陽","月","鍵","魚","錨","十字架"];
+const tarotNames = ["愚者","魔術師","女教皇","女帝","皇帝","教皇","恋人","戦車","力","隠者","運命の輪","正義","吊るされた男","死神","節制","悪魔","塔","星","月","太陽","審判","世界"];
 
-// ランダムカード配布
-function drawCards(n){
-  let deck = Array.from({length:36},(_,i)=>i+1);
-  deck.sort(()=>Math.random()-0.5);
-  return deck.slice(0,n);
-}
+// ゲーム状態
+let playerHand = [], aiHands = [], playerFragments = 0, aiFragments = [0,0];
+let deck = [...rnmCards], turn = 0, logEl = document.getElementById("log");
+const aiNames = ["AI_アルタ","AI_ベラ"];
+
+// 山札シャッフル
+function shuffle(array){ return array.sort(()=>Math.random()-0.5); }
+deck = shuffle(deck);
 
 // 初期手札
-playerHand = drawCards(5);
-aiHands = [drawCards(5), drawCards(5)];
-document.getElementById("playerHand").innerText = "手札: " + playerHand.map(i=>rnmCards[i-1]).join(", ");
+function draw(n){ return deck.splice(0,n); }
+playerHand = draw(5);
+aiHands = [draw(5), draw(5)];
+document.getElementById("playerHand").innerText = "手札: " + playerHand.map(i=>rnmNames[i-1]).join(", ");
 
 // ターン実行
 function playTurn(){
-  const worldCard = tarotCards[Math.floor(Math.random()*tarotCards.length)];
+  if(deck.length===0 && playerHand.length===0 && aiHands.every(h=>h.length===0)){
+    logEl.textContent += `--- 山札が尽きました ---\n`;
+    let all = [playerFragments,...aiFragments];
+    let winnerIdx = all.indexOf(Math.max(...all));
+    let winnerName = winnerIdx===0?"Dogwarp":aiNames[winnerIdx-1];
+    logEl.textContent += `勝者は ${winnerName} です！\n`;
+    return;
+  }
+
+  const worldCard = tarotNames[Math.floor(Math.random()*tarotNames.length)];
+  logEl.textContent += `--- ターン ${turn+1} ---\n`;
+  logEl.textContent += `世界情勢: 【${worldCard}】\n`;
 
   // プレイヤー入力
   const cardInput = document.getElementById("playerCards").value.split(",").map(x=>parseInt(x.trim())).filter(x=>playerHand.includes(x));
   const story = document.getElementById("playerStory").value || "物語なし";
-
+  const pc = cardInput.map(i=>rnmNames[i-1]);
   const playerCreativity = Math.floor(Math.random()*6);
   const playerPersuasion = Math.floor(Math.random()*4);
   const playerFit = Math.floor(Math.random()*3);
   const playerPoint = playerCreativity + playerPersuasion + playerFit;
   playerFragments += playerPoint;
+  // 手札からカードを削除し補充
+  playerHand = playerHand.filter(c=>!cardInput.includes(c));
+  playerHand = playerHand.concat(draw(Math.min(cardInput.length, deck.length)));
+  document.getElementById("playerHand").innerText = "手札: " + playerHand.map(i=>rnmNames[i-1]).join(", ");
 
-  logEl.textContent += `--- ターン ---\n`;
-  logEl.textContent += `世界情勢: 【${worldCard}】\n`;
-  logEl.textContent += `Dogwarp: 役【${cardInput.map(i=>rnmCards[i-1]).join("＋")}】\n`;
+  logEl.textContent += `Dogwarp: 役【${pc.join("＋")}】\n`;
   logEl.textContent += `物語: ${story}\n`;
   logEl.textContent += `得点: 創造性${playerCreativity}点、説得力${playerPersuasion}点、適合性${playerFit}点\n`;
   logEl.textContent += `運命の欠片: ${playerFragments}枚\n\n`;
 
-  // AIプレイヤー行動
+  // AIターン
   aiHands.forEach((hand,idx)=>{
-    const aiCardCount = Math.floor(Math.random()*hand.length)+1;
-    const aiCards = [];
-    let tmpHand = hand.slice();
-    for(let i=0;i<aiCardCount;i++){
-      const choice = tmpHand.splice(Math.floor(Math.random()*tmpHand.length),1)[0];
-      aiCards.push(choice);
-    }
-    const aiStory = `AIが${aiCards.map(i=>rnmCards[i-1]).join("＋")}で冒険しました。`;
+    if(hand.length===0) return;
+    const aiCardCount = Math.min(hand.length,Math.floor(Math.random()*3)+1);
+    let tmp = hand.slice(), aiCards=[];
+    for(let i=0;i<aiCardCount;i++){ aiCards.push(tmp.splice(Math.floor(Math.random()*tmp.length),1)[0]); }
+    aiHands[idx] = hand.filter(c=>!aiCards.includes(c));
+    aiHands[idx] = aiHands[idx].concat(draw(Math.min(aiCardCount, deck.length)));
+    const aiStory = `AIが${aiCards.map(i=>rnmNames[i-1]).join("＋")}で冒険しました。`;
     const aiCreativity = Math.floor(Math.random()*6);
     const aiPersuasion = Math.floor(Math.random()*4);
     const aiFit = Math.floor(Math.random()*3);
     const aiPoint = aiCreativity + aiPersuasion + aiFit;
     aiFragments[idx] += aiPoint;
-    logEl.textContent += `${aiNames[idx]}: 役【${aiCards.map(i=>rnmCards[i-1]).join("＋")}】\n`;
+
+    logEl.textContent += `${aiNames[idx]}: 役【${aiCards.map(i=>rnmNames[i-1]).join("＋")}】\n`;
     logEl.textContent += `物語: ${aiStory}\n`;
     logEl.textContent += `得点: 創造性${aiCreativity}点、説得力${aiPersuasion}点、適合性${aiFit}点\n`;
-    logEl.textContent += `運命の欠片: ${aiFragments[idx]}枚\n\n`;
+    logEl.textContent += `運命の欠片: ${aiFragments[idx]}枚\n`;
+
+    // AI駆け引き
+    let move="なし";
+    if(aiFragments[idx]<Math.max(playerFragments,...aiFragments)) move=(Math.random()<0.5)?"取引":"強奪";
+    if(move!=="なし"){
+      let target=0; if(Math.random()<0.3) target=1-idx;
+      let success=Math.random() < ((move==="強奪")?0.5:0.6);
+      if(success && ((target===0 && playerFragments>0)||(target!==0 && aiFragments[target]>0))){
+        if(target===0) playerFragments--; else aiFragments[target]--;
+        aiFragments[idx]++;
+        logEl.textContent += `${aiNames[idx]}は${target===0?"Dogwarp":aiNames[target]}に運命の${move}成功！\n`;
+      } else { if(aiFragments[idx]>0) aiFragments[idx]--; logEl.textContent += `${aiNames[idx]}の運命の${move}失敗…1欠片減少\n`; }
+    }
+    logEl.textContent += "\n";
   });
 
-  // 駆け引き判定
+  // プレイヤー駆け引き
   const move = document.getElementById("playerMove").value;
   const target = parseInt(document.getElementById("targetAI").value);
-  if(move !== "なし"){
-    let success = Math.random() < 0.6; // 成功確率60%
-    if(move === "強奪") success = Math.random() < 0.5; // 強奪は50%
-    if(success && aiFragments[target]>0){
-      aiFragments[target]--;
-      playerFragments++;
-      logEl.textContent += `駆け引き成功！Dogwarpは${aiNames[target]}から運命の欠片1枚獲得。\n\n`;
-    } else {
-      if(playerFragments>0) playerFragments--;
-      logEl.textContent += `駆け引き失敗…Dogwarpの運命の欠片1枚失う。\n\n`;
-    }
+  if(move!=="なし"){
+    let success=Math.random() < ((move==="強奪")?0.5:0.6);
+    if(success && aiFragments[target]>0){ aiFragments[target]--; playerFragments++; logEl.textContent += `駆け引き成功！Dogwarpは${aiNames[target]}から欠片1枚獲得。\n\n`; }
+    else{ if(playerFragments>0) playerFragments--; logEl.textContent += `駆け引き失敗…Dogwarpの欠片1枚減少。\n\n`; }
   }
 
-  // ターン後リセット
-  document.getElementById("playerCards").value = "";
-  document.getElementById("playerStory").value = "";
+  // 入力リセット
+  document.getElementById("playerCards").value=""; document.getElementById("playerStory").value="";
+  turn++;
 }
 </script>
 
