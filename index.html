@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>リンカーネイション（完全版・大アルカナ対応）</title>
+<title>リンカーネイション（完全版・AI物語生成対応）</title>
 <style>
   body { font-family: "Yu Gothic", sans-serif; background-color: #fdf6e3; color: #333; line-height: 1.6; padding: 20px; }
   h1,h2 { color: #b58900; }
@@ -14,7 +14,7 @@
 </head>
 <body>
 
-<h1>リンカーネイション（完全版・大アルカナ対応）</h1>
+<h1>リンカーネイション（完全版・AI物語生成対応）</h1>
 
 <section>
 <h2>プレイヤー: Dogwarp</h2>
@@ -74,6 +74,18 @@ logEl.textContent += `世界情勢: 【${currentWorldCard}】\n`;
 // カード名取得
 function cardName(i){ return rnmNames[i-1]; }
 
+// AI物語生成（ブラウザ完結版）
+function generateAIStory(aiName, aiCards, worldCard) {
+  const actions = ["冒険した","探索した","守護した","挑戦した","発見した"];
+  const adjectives = ["神秘的な","危険な","輝かしい","孤独な","不思議な"];
+  const items = ["秘宝","鍵","光","力","希望"];
+  const cardStr = aiCards.map(i=>cardName(i)).join("＋");
+  const action = actions[Math.floor(Math.random()*actions.length)];
+  const adj = adjectives[Math.floor(Math.random()*adjectives.length)];
+  const item = items[Math.floor(Math.random()*items.length)];
+  return `${aiName}は【${cardStr}】で${adj}${item}を${action}。世界情勢【${worldCard}】に導かれ、新たな可能性を切り開いた。`;
+}
+
 // ターン実行
 function playTurn(){
   if(deck.length===0 && playerHand.length===0 && aiHands.every(h=>h.length===0)){
@@ -116,7 +128,8 @@ function playTurn(){
     for(let i=0;i<aiCardCount;i++){ aiCards.push(tmp.splice(Math.floor(Math.random()*tmp.length),1)[0]); }
     aiHands[idx] = hand.filter(c=>!aiCards.includes(c));
     aiHands[idx] = aiHands[idx].concat(draw(Math.min(aiCardCount, deck.length)));
-    const aiStory = `AIが${aiCards.map(i=>cardName(i)).join("＋")}で冒険しました。`;
+
+    const aiStory = generateAIStory(aiNames[idx], aiCards, currentWorldCard);
     const aiCreativity = Math.floor(Math.random()*6);
     const aiPersuasion = Math.floor(Math.random()*4);
     const aiFit = Math.floor(Math.random()*3);
@@ -128,7 +141,7 @@ function playTurn(){
     logEl.textContent += `得点: 創造性${aiCreativity}点、説得力${aiPersuasion}点、適合性${aiFit}点\n`;
     logEl.textContent += `運命の欠片: ${aiFragments[idx]}枚\n`;
 
-    // AI駆け引き
+    // AI駆け引き（ランダム）
     let move="なし";
     if(aiFragments[idx]<Math.max(playerFragments,...aiFragments)) move=(Math.random()<0.5)?"取引":"強奪";
     if(move!=="なし"){
@@ -154,11 +167,8 @@ function playTurn(){
 
   // 次の世界情勢をランダム更新
   currentWorldCard = tarotNames[Math.floor(Math.random()*tarotNames.length)];
-
-  // 入力リセット
-  document.getElementById("playerCards").value=""; 
-  document.getElementById("playerStory").value="";
   turn++;
+  logEl.scrollTop = logEl.scrollHeight;
 }
 </script>
 
